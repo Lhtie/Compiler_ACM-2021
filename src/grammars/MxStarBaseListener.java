@@ -1,4 +1,5 @@
-// Generated from C:/Users/lhtie/Documents/Repos/Compiler_ACM-2022/src/grammars-antlr4\MxStar.g4 by ANTLR 4.9.1
+// Generated from C:/Users/lhtie/Documents/Repos/Compiler_ACM-2022/src/grammars\MxStar.g4 by ANTLR 4.9.1
+package grammars;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -58,18 +59,6 @@ public class MxStarBaseListener implements MxStarListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitConstructor_def(MxStarParser.Constructor_defContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterMain_suite(MxStarParser.Main_suiteContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMain_suite(MxStarParser.Main_suiteContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

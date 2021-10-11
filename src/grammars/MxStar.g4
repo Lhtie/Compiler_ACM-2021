@@ -2,16 +2,15 @@ grammar MxStar;
 
 // Parser
 
-program : define* main_suite define*;
+program : define*;
 define : class_def | func_def | var_def_stmt;
 class_def : CLASS IDENTIFIER '{' constructor_def? (var_def_stmt | func_def)* '}' ';';
 constructor_def : IDENTIFIER '(' ')' suite;
-main_suite : INT MAIN suite;
 var_def_stmt : var_def ';';
 var_def : type var_def_arg (',' var_def_arg)*;
 var_def_arg : IDENTIFIER ('=' expr)?;
 func_def : func_type IDENTIFIER parameter_list suite;
-basic_type : BOOL | INT | VOID | STRING;
+basic_type : BOOL | INT | STRING;
 type : IDENTIFIER | basic_type | type '[' ']';
 func_type : type | VOID;
 parameter_list : '(' (parameter (',' parameter)*)? ')';
@@ -118,7 +117,6 @@ RETURN : 'return';
 NEW : 'new';
 CLASS : 'class';
 THIS : 'this';
-MAIN : 'main()';
 LAMBDA_HEAD : '[&]';
 
 fragment DIGIT : [0-9];

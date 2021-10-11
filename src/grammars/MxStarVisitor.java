@@ -1,4 +1,5 @@
-// Generated from C:/Users/lhtie/Documents/Repos/Compiler_ACM-2022/src/grammars-antlr4\MxStar.g4 by ANTLR 4.9.1
+// Generated from C:/Users/lhtie/Documents/Repos/Compiler_ACM-2022/src/grammars\MxStar.g4 by ANTLR 4.9.1
+package grammars;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -33,12 +34,6 @@ public interface MxStarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitConstructor_def(MxStarParser.Constructor_defContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxStarParser#main_suite}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMain_suite(MxStarParser.Main_suiteContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MxStarParser#var_def_stmt}.
 	 * @param ctx the parse tree
