@@ -1,5 +1,5 @@
-// Generated from C:/Users/lhtie/Documents/Repos/Compiler_ACM-2022/src/grammars\MxStar.g4 by ANTLR 4.9.1
-package grammars;
+// Generated from C:/Users/lhtie/Documents/Repos/Compiler_ACM-2021/src/Grammars\MxStar.g4 by ANTLR 4.9.1
+package Grammars;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -17,7 +17,7 @@ public class MxStarLexer extends Lexer {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		ADD=1, MINUS=2, STAR=3, DIV=4, MOD=5, LESS_THAN=6, GREATER_THAN=7, EQUALS=8, 
+		PLUS=1, MINUS=2, STAR=3, DIV=4, MOD=5, LESS_THAN=6, GREATER_THAN=7, EQUALS=8, 
 		GT_EQ=9, LT_EQ=10, NOT_EQ=11, AND_LOG=12, OR_LOG=13, NOT_LOG=14, LEFT_SHIFT=15, 
 		RIGHT_SHIFT=16, OR_OP=17, XOR_OP=18, AND_OP=19, NOT_OP=20, ASSIGN=21, 
 		PLUS_PLUS=22, MINUS_MINUS=23, DOT=24, COMMA=25, SEMI=26, ARROW=27, OPEN_PAREN=28, 
@@ -36,7 +36,7 @@ public class MxStarLexer extends Lexer {
 
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"ADD", "MINUS", "STAR", "DIV", "MOD", "LESS_THAN", "GREATER_THAN", "EQUALS", 
+			"PLUS", "MINUS", "STAR", "DIV", "MOD", "LESS_THAN", "GREATER_THAN", "EQUALS", 
 			"GT_EQ", "LT_EQ", "NOT_EQ", "AND_LOG", "OR_LOG", "NOT_LOG", "LEFT_SHIFT", 
 			"RIGHT_SHIFT", "OR_OP", "XOR_OP", "AND_OP", "NOT_OP", "ASSIGN", "PLUS_PLUS", 
 			"MINUS_MINUS", "DOT", "COMMA", "SEMI", "ARROW", "OPEN_PAREN", "CLOSE_PAREN", 
@@ -63,7 +63,7 @@ public class MxStarLexer extends Lexer {
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "ADD", "MINUS", "STAR", "DIV", "MOD", "LESS_THAN", "GREATER_THAN", 
+			null, "PLUS", "MINUS", "STAR", "DIV", "MOD", "LESS_THAN", "GREATER_THAN", 
 			"EQUALS", "GT_EQ", "LT_EQ", "NOT_EQ", "AND_LOG", "OR_LOG", "NOT_LOG", 
 			"LEFT_SHIFT", "RIGHT_SHIFT", "OR_OP", "XOR_OP", "AND_OP", "NOT_OP", "ASSIGN", 
 			"PLUS_PLUS", "MINUS_MINUS", "DOT", "COMMA", "SEMI", "ARROW", "OPEN_PAREN", 

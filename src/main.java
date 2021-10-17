@@ -1,6 +1,10 @@
-import grammars.MxStarParser;
-import grammars.MxStarLexer;
-import grammars.MxStarVisitor;
+import AST.RootNode;
+import Frontend.ASTBuilder;
+import Grammars.MxStarParser;
+import Grammars.MxStarLexer;
+import Grammars.MxStarVisitor;
+import Util.error.*;
+
 import org.antlr.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -20,7 +24,8 @@ public class main {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MxStarParser parser = new MxStarParser(tokens);
             ParseTree parseTreeRoot = parser.program();
-
+            ASTBuilder astBuilder = new ASTBuilder();
+            RootNode ASTRoot = (RootNode) astBuilder.visit(parseTreeRoot);
         } catch(error er) {
             System.err.println(er.toString());
             throw new RuntimeException();

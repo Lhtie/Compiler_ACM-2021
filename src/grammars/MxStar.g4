@@ -3,7 +3,11 @@ grammar MxStar;
 // Parser
 
 program : define*;
-define : class_def | func_def | var_def_stmt;
+define
+    : class_def
+    | func_def
+    | global_var_def_stmt
+    ;
 class_def : CLASS IDENTIFIER '{' constructor_def? (var_def_stmt | func_def)* '}' ';';
 constructor_def : IDENTIFIER '(' ')' suite;
 var_def_stmt : var_def ';';
@@ -11,56 +15,81 @@ var_def : type var_def_arg (',' var_def_arg)*;
 var_def_arg : IDENTIFIER ('=' expr)?;
 func_def : func_type IDENTIFIER parameter_list suite;
 basic_type : BOOL | INT | STRING;
-type : IDENTIFIER | basic_type | type '[' ']';
+type : (IDENTIFIER | basic_type) ('[' ']')*;
 func_type : type | VOID;
 parameter_list : '(' (parameter (',' parameter)*)? ')';
 parameter : type IDENTIFIER;
-suite : '{' (stmt | suite)* '}';
-stmt : var_def_stmt | expr_stmt | if_stmt | loop_stmt | flow_stmt;
-if_stmt : IF '(' expr ')' (suite | stmt | ';') (ELSE (suite | stmt | ';'))?;
-loop_stmt : while_stmt | for_stmt;
-while_stmt : WHILE '(' expr ')' (suite | stmt | ';');
-for_stmt : FOR '(' (var_def | expr)? ';' expr? ';' expr? ')' (suite | stmt | ';');
-flow_stmt : (RETURN expr? | BREAK | CONITNUE) ';';
-expr_stmt : expr? ';';
+global_var_def_stmt : var_def ';';
+suite : '{' (stmt* | suite) '}';
+stmt
+    : var_def_stmt
+    | expr_stmt
+    | if_stmt
+    | loop_stmt
+    | flow_stmt
+    | ';'
+    ;
+block : suite | stmt | ';';
+if_stmt : IF '(' expr ')' block else_stmt?;
+else_stmt : ELSE block;
+loop_stmt
+    : while_stmt
+    | for_stmt
+    ;
+while_stmt : WHILE '(' expr ')' block;
+for_stmt : FOR '(' for_init? ';' for_stop? ';' expr? ')' block;
+for_init : var_def | expr;
+for_stop : expr;
+flow_stmt
+    : return_stmt
+    | break_stmt
+    | continue_stmt
+    ;
+return_stmt : RETURN expr? ';';
+break_stmt : BREAK ';';
+continue_stmt : CONITNUE ';';
+expr_stmt : expr ';';
 expr
-    : expr (PLUS_PLUS | MINUS_MINUS)
-    | expr arg_list
-    | expr '[' expr ']'
-    | expr '.' expr
-    | <assoc=right> (PLUS_PLUS | MINUS_MINUS) expr
-    | <assoc=right> (ADD | MINUS) expr
-    | <assoc=right> (NOT_LOG | NOT_OP) expr
-    | <assoc=right> NEW creator
-    | expr (STAR | DIV | MOD) expr
-    | expr (ADD | MINUS) expr
-    | expr (LEFT_SHIFT | RIGHT_SHIFT) expr
-    | expr (LESS_THAN | GREATER_THAN) expr
-    | expr (LT_EQ | GT_EQ) expr
-    | expr (EQUALS | NOT_EQ) expr
-    | expr AND_OP expr
-    | expr XOR_OP expr
-    | expr OR_OP expr
-    | expr AND_LOG expr
-    | expr OR_LOG expr
-    | <assoc=right> expr ASSIGN expr
-
-    | THIS
+    : expr (PLUS_PLUS | MINUS_MINUS)                    #preIncDecExpr
+    | expr arg_list                                     #funcCallExpr
+    | lambda_stmt                                       #lambdaExpr
+    | expr '[' expr ']'                                 #arrayExpr
+    | expr '.' expr                                     #binaryExpr
+    | <assoc=right> (PLUS_PLUS | MINUS_MINUS) expr      #postIncDecExpr
+    | <assoc=right> (PLUS | MINUS) expr                 #unaryExpr
+    | <assoc=right> (NOT_LOG | NOT_OP) expr             #unaryExpr
+    | <assoc=right> NEW creator                         #newExpr
+    | expr (STAR | DIV | MOD) expr                      #binaryExpr
+    | expr (PLUS | MINUS) expr                          #binaryExpr
+    | expr (LEFT_SHIFT | RIGHT_SHIFT) expr              #binaryExpr
+    | expr (LESS_THAN | GREATER_THAN) expr              #binaryExpr
+    | expr (LT_EQ | GT_EQ) expr                         #binaryExpr
+    | expr (EQUALS | NOT_EQ) expr                       #binaryExpr
+    | expr AND_OP expr                                  #binaryExpr
+    | expr XOR_OP expr                                  #binaryExpr
+    | expr OR_OP expr                                   #binaryExpr
+    | expr AND_LOG expr                                 #binaryExpr
+    | expr OR_LOG expr                                  #binaryExpr
+    | <assoc=right> expr ASSIGN expr                    #binaryExpr
+    | '(' expr ')'                                      #bracketExpr
+    | primary                                           #primayExpr
+    ;
+primary
+    : THIS
     | NULL
     | INT_LITERAL
     | BOOL_LITERAL
     | STRING_LITERAL
-    | lambda_stmt
     | IDENTIFIER
-    | '(' expr ')'
     ;
 arg_list : '(' (expr (',' expr)*)? ')';
-creator : IDENTIFIER | basic_type | creator '[' expr? ']';
+creator : (IDENTIFIER | basic_type) creator_size*;
+creator_size : '[' expr? ']';
 lambda_stmt : LAMBDA_HEAD parameter_list? ARROW suite arg_list;
 
 // Lexer
 
-ADD : '+';
+PLUS : '+';
 MINUS : '-';
 STAR: '*';
 DIV : '/';

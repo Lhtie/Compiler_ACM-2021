@@ -60,7 +60,7 @@ null
 
 token symbolic names:
 null
-ADD
+PLUS
 MINUS
 STAR
 DIV
@@ -119,7 +119,7 @@ LINE_COMMENT
 WS
 
 rule names:
-ADD
+PLUS
 MINUS
 STAR
 DIV
