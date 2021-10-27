@@ -150,6 +150,7 @@ LAMBDA_HEAD : '[&]';
 
 fragment DIGIT : [0-9];
 fragment NON_ZERO_DIGIT : [1-9];
+fragment LETTER : [a-zA-Z];
 fragment LETTER_ : [a-zA-Z_];
 fragment SPACE : ' ';
 fragment ESCAPE_CHAR : ["nr\\];
@@ -169,7 +170,7 @@ STRING_LITERAL
     : '"' (SPACE | '\\' ESCAPE_CHAR | PRINTABLE_CHAR)*? '"'
     ;
 
-IDENTIFIER : LETTER_ (LETTER_ | DIGIT)*;
+IDENTIFIER : LETTER (LETTER_ | DIGIT)*;
 NEWLINE : '\r'?'\n' -> skip;
 BlockComment : '/*' .*? '*/' -> skip;
 LINE_COMMENT : '//'~ [\r\n]* -> skip;

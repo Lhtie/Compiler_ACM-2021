@@ -75,7 +75,7 @@ public class Type {
         if (!this.islValue)
             throw new semanticError("Semantic Error: cannot assign to rvalue", pos);
         if(other.typeName == Type.typeToken.NULL){
-            if (!this.referable() || this.typeName == typeToken.STRING)
+            if (!this.referable() || this.typeName == typeToken.STRING && this.dim == 0)
                 throw new semanticError("Semantic Error: cannot assign null", pos);
         } else if (other.typeName == typeToken.THIS){
             if (this.typeName != typeToken.CLASS)

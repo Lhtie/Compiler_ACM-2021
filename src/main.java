@@ -23,11 +23,17 @@ public class main {
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
+            lexer.removeErrorListeners();
+            lexer.addErrorListener(new MxStarErrorListener());
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             MxStarParser parser = new MxStarParser(tokens);
+            parser.removeErrorListeners();
+            parser.addErrorListener(new MxStarErrorListener());
+
             ParseTree parseTreeRoot = parser.program();
             ASTBuilder astBuilder = new ASTBuilder();
             RootNode ASTRoot = (RootNode) astBuilder.visit(parseTreeRoot);
+
             globalScope gScope = new globalScope();
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);

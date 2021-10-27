@@ -59,6 +59,9 @@ public class SemanticChecker implements ASTVisitor {
         retType = gScope.getRetTypeFromFunc(it.pos, "main");
         if (retType.typeName != Type.typeToken.INT || retType.dim > 0)
             throw new semanticError("Semantic Error: main function need to return int", it.pos);
+        ArrayList<Type> para = gScope.getParametersFromFunc(it.pos, "main");
+        if (para.size() != 0)
+            throw new semanticError("Semantic Error: main function should not have parameters", it.pos);
     }
 
     @Override
@@ -95,13 +98,13 @@ public class SemanticChecker implements ASTVisitor {
         it.varDefArg.forEach(x -> {
             if (gScope.findClass(x.name))
                 throw new semanticError("Semantic Error: variable rename with class", x.pos);
-            if (gScope.findFunc(x.name, false))
+            if (currentScope instanceof globalScope && ((globalScope) currentScope).findFunc(x.name, false))
                 throw new semanticError("Semantic Error: variable rename with function", x.pos);
-            currentScope.addVar(x.pos, x.name, type);
             if (x.isInitialized){
                 x.expr.accept(this);
                 type.assignChecker(x.pos, gScope, retType);
             }
+            currentScope.addVar(x.pos, x.name, type);
         });
     }
 
@@ -275,6 +278,8 @@ public class SemanticChecker implements ASTVisitor {
         retType.dim--;
         if (retType.dim < 0)
             throw new semanticError("Semantic Error: dimension not matched", it.pos);
+        if (retType.dim == 0)
+            retType.islValue = true;
     }
 
     @Override
@@ -337,6 +342,11 @@ public class SemanticChecker implements ASTVisitor {
                         else if(isCmpOp(it.binaryOp))
                             retType = new Type(Type.typeToken.BOOL, 0, false);
                         else throw new semanticError("Semantic Error: string can only plus or compare", it.pos);
+                    } else if (lhsType.typeName == Type.typeToken.NULL) {
+                        lhsType.typeMatcher(it.pos, rhsType);
+                        if (it.binaryOp != binaryExprNode.binaryOpType.NOT_EQ && it.binaryOp != binaryExprNode.binaryOpType.EQUALS)
+                            throw new semanticError("Semantic Error: can only compare with == or !=", it.pos);
+                        retType = new Type(Type.typeToken.BOOL, 0, false);
                     } else throw new semanticError("Semantic Error: invalid binary expression", it.pos);
                 }
             }
@@ -348,6 +358,8 @@ public class SemanticChecker implements ASTVisitor {
         it.expr.accept(this);
         if (retType.typeName != Type.typeToken.INT || retType.dim > 0)
             throw new semanticError("Semantic Error: ++ or -- need to be operated on int", it.pos);
+        if (!retType.islValue)
+            throw new semanticError("Semantic Error: ++ or -- need ot be operated on l-value", it.pos);
     }
 
     @Override
@@ -355,6 +367,8 @@ public class SemanticChecker implements ASTVisitor {
         it.expr.accept(this);
         if (retType.typeName != Type.typeToken.INT || retType.dim > 0)
             throw new semanticError("Semantic Error: ++ or -- need to be operated on int", it.pos);
+        if (!retType.islValue)
+            throw new semanticError("Semantic Error: ++ or -- need ot be operated on l-value", it.pos);
         retType.islValue = false;
     }
 
