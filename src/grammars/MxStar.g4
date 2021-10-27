@@ -8,7 +8,8 @@ define
     | func_def
     | global_var_def_stmt
     ;
-class_def : CLASS IDENTIFIER '{' constructor_def? (var_def_stmt | func_def)* '}' ';';
+class_def : CLASS IDENTIFIER '{'  (var_def_stmt | func_def)*
+            constructor_def? (var_def_stmt | func_def)*'}' ';';
 constructor_def : IDENTIFIER '(' ')' suite;
 var_def_stmt : var_def ';';
 var_def : type var_def_arg (',' var_def_arg)*;
@@ -20,14 +21,13 @@ func_type : type | VOID;
 parameter_list : '(' (parameter (',' parameter)*)? ')';
 parameter : type IDENTIFIER;
 global_var_def_stmt : var_def ';';
-suite : '{' (stmt* | suite) '}';
+suite : '{' block* '}';
 stmt
     : var_def_stmt
     | expr_stmt
     | if_stmt
     | loop_stmt
     | flow_stmt
-    | ';'
     ;
 block : suite | stmt | ';';
 if_stmt : IF '(' expr ')' block else_stmt?;
@@ -50,12 +50,12 @@ break_stmt : BREAK ';';
 continue_stmt : CONITNUE ';';
 expr_stmt : expr ';';
 expr
-    : expr (PLUS_PLUS | MINUS_MINUS)                    #preIncDecExpr
+    : expr '.' expr                                     #binaryExpr
     | expr arg_list                                     #funcCallExpr
     | lambda_stmt                                       #lambdaExpr
     | expr '[' expr ']'                                 #arrayExpr
-    | expr '.' expr                                     #binaryExpr
-    | <assoc=right> (PLUS_PLUS | MINUS_MINUS) expr      #postIncDecExpr
+    | <assoc=right> (PLUS_PLUS | MINUS_MINUS) expr      #preIncDecExpr
+    | expr (PLUS_PLUS | MINUS_MINUS)                    #postIncDecExpr
     | <assoc=right> (PLUS | MINUS) expr                 #unaryExpr
     | <assoc=right> (NOT_LOG | NOT_OP) expr             #unaryExpr
     | <assoc=right> NEW creator                         #newExpr
@@ -83,7 +83,7 @@ primary
     | IDENTIFIER
     ;
 arg_list : '(' (expr (',' expr)*)? ')';
-creator : (IDENTIFIER | basic_type) creator_size*;
+creator : (IDENTIFIER | basic_type) ('(' ')' | creator_size*);
 creator_size : '[' expr? ']';
 lambda_stmt : LAMBDA_HEAD parameter_list? ARROW suite arg_list;
 
@@ -152,7 +152,7 @@ fragment DIGIT : [0-9];
 fragment NON_ZERO_DIGIT : [1-9];
 fragment LETTER_ : [a-zA-Z_];
 fragment SPACE : ' ';
-fragment ESCAPE_CHAR : [\n\\] | '\\"';
+fragment ESCAPE_CHAR : ["nr\\];
 fragment PRINTABLE_CHAR : ~[\\\r\n\f"];
 
 BOOL_LITERAL
@@ -166,7 +166,7 @@ INT_LITERAL
     ;
 
 STRING_LITERAL
-    : '"' (SPACE | ESCAPE_CHAR | PRINTABLE_CHAR)* '"'
+    : '"' (SPACE | '\\' ESCAPE_CHAR | PRINTABLE_CHAR)*? '"'
     ;
 
 IDENTIFIER : LETTER_ (LETTER_ | DIGIT)*;

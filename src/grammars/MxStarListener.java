@@ -298,18 +298,6 @@ public interface MxStarListener extends ParseTreeListener {
 	 */
 	void exitExpr_stmt(MxStarParser.Expr_stmtContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code postIncDecExpr}
-	 * labeled alternative in {@link MxStarParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterPostIncDecExpr(MxStarParser.PostIncDecExprContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code postIncDecExpr}
-	 * labeled alternative in {@link MxStarParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitPostIncDecExpr(MxStarParser.PostIncDecExprContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code newExpr}
 	 * labeled alternative in {@link MxStarParser#expr}.
 	 * @param ctx the parse tree
@@ -321,6 +309,18 @@ public interface MxStarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitNewExpr(MxStarParser.NewExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code postIncDecExpr}
+	 * labeled alternative in {@link MxStarParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterPostIncDecExpr(MxStarParser.PostIncDecExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code postIncDecExpr}
+	 * labeled alternative in {@link MxStarParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitPostIncDecExpr(MxStarParser.PostIncDecExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code unaryExpr}
 	 * labeled alternative in {@link MxStarParser#expr}.

@@ -1,12 +1,10 @@
 package Frontend;
 
 import AST.*;
+import Util.Type;
 import Util.position;
 import Grammars.MxStarBaseVisitor;
 import Grammars.MxStarParser;
-import jdk.jfr.Experimental;
-
-import javax.naming.ldap.ExtendedRequest;
 
 public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
     @Override
@@ -22,6 +20,8 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
         if (ctx.constructor_def() != null){
             classDef.constructorDef = (constructorDefNode) visit(ctx.constructor_def());
         }
+        ctx.var_def_stmt().forEach(x -> classDef.varDef.add((varDefNode) visit(x)));
+        ctx.func_def().forEach(x -> classDef.funcDef.add((funcDefNode) visit(x)));
         return classDef;
     }
 
@@ -59,12 +59,12 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitBasic_type(MxStarParser.Basic_typeContext ctx) {
         if (ctx.BOOL() != null)
-            return new basicTypeNode(new position(ctx), basicTypeNode.basicTypeToken.BOOL);
+            return new basicTypeNode(new position(ctx), Type.typeToken.BOOL);
         else if (ctx.INT() != null)
-            return new basicTypeNode(new position(ctx), basicTypeNode.basicTypeToken.INT);
+            return new basicTypeNode(new position(ctx), Type.typeToken.INT);
         else{
             assert(ctx.STRING() != null);
-            return new basicTypeNode(new position(ctx), basicTypeNode.basicTypeToken.STRING);
+            return new basicTypeNode(new position(ctx), Type.typeToken.STRING);
         }
     }
 
@@ -106,13 +106,9 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitSuite(MxStarParser.SuiteContext ctx) {
-        if (ctx.suite() != null){
-            return new suiteNode(new position(ctx), (suiteNode) visit(ctx.suite()));
-        } else {
-            suiteNode suite = new suiteNode(new position(ctx));
-            ctx.stmt().forEach(x -> suite.stmt.add((StmtNode) visit(x)));
-            return suite;
-        }
+        suiteNode suite = new suiteNode(new position(ctx));
+        ctx.block().forEach(x -> suite.block.add((blockNode) visit(x)));
+        return suite;
     }
 
     @Override
@@ -210,13 +206,6 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ASTNode visitPreIncDecExpr(MxStarParser.PreIncDecExprContext ctx) {
-        if (ctx.PLUS_PLUS() != null)
-            return new preIncDecExprNode(new position(ctx), preIncDecExprNode.preIncDecOpType.PLUSPLUS, (ExprNode) visit(ctx.expr()));
-        else return new preIncDecExprNode(new position(ctx), preIncDecExprNode.preIncDecOpType.MINUSMINUS, (ExprNode) visit(ctx.expr()));
-    }
-
-    @Override
     public ASTNode visitFuncCallExpr(MxStarParser.FuncCallExprContext ctx) {
         return new funcCallExprNode(new position(ctx), (ExprNode) visit(ctx.expr()), (argListNode) visit(ctx.arg_list()));
     }
@@ -266,7 +255,7 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
             binaryExpr.binaryOp = binaryExprNode.binaryOpType.AND_OP;
         else if (ctx.XOR_OP() != null)
             binaryExpr.binaryOp = binaryExprNode.binaryOpType.XOR_OP;
-        else if (ctx.XOR_OP() != null)
+        else if (ctx.OR_OP() != null)
             binaryExpr.binaryOp = binaryExprNode.binaryOpType.OR_OP;
         else if (ctx.AND_LOG() != null)
             binaryExpr.binaryOp = binaryExprNode.binaryOpType.AND_LOG;
@@ -275,6 +264,13 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
         else if (ctx.ASSIGN() != null)
             binaryExpr.binaryOp = binaryExprNode.binaryOpType.ASSIGN;
         return binaryExpr;
+    }
+
+    @Override
+    public ASTNode visitPreIncDecExpr(MxStarParser.PreIncDecExprContext ctx) {
+        if (ctx.PLUS_PLUS() != null)
+            return new preIncDecExprNode(new position(ctx), preIncDecExprNode.preIncDecOpType.PLUSPLUS, (ExprNode) visit(ctx.expr()));
+        else return new preIncDecExprNode(new position(ctx), preIncDecExprNode.preIncDecOpType.MINUSMINUS, (ExprNode) visit(ctx.expr()));
     }
 
     @Override

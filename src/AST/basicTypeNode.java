@@ -1,14 +1,12 @@
 package AST;
 
 import Util.position;
+import Util.Type;
 
 public class basicTypeNode extends ASTNode{
-    public enum basicTypeToken{
-        BOOL, INT, STRING
-    }
-    public basicTypeToken basicType;
+    public Type.typeToken basicType;
 
-    public basicTypeNode(position pos, basicTypeToken basicType_){
+    public basicTypeNode(position pos, Type.typeToken basicType_){
         super(pos);
         basicType = basicType_;
     }

@@ -9,7 +9,7 @@ public class funcCallExprNode extends ExprNode{
     public funcCallExprNode(position pos, ExprNode expr_, argListNode argList_){
         super(pos);
         expr = expr_;
-        argList = argList;
+        argList = argList_;
     }
 
     @Override
