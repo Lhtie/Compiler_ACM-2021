@@ -37,7 +37,10 @@ public class FlowController {
     public void returnFunc(position pos, globalScope gScope, Type retType){
         Type funcRetType;
         if (Objects.equals(funcName, "Lambda")){
-            if (this.retType == null) this.retType = new Type(retType);
+            if (this.retType == null){
+                this.retType = new Type(retType);
+                this.retType.islValue = true;
+            }
             funcRetType = this.retType;
         } else funcRetType = gScope.getRetTypeFromFunc(pos, funcName);
         if (funcRetType.typeName == Type.typeToken.VOID){
