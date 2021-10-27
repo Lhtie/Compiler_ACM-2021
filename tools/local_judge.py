@@ -9,8 +9,8 @@ import os, time
 test_cases_dir = '../testcases/sema/'
 # test_cases_dir = '../testcases/codegen/'
 # test_cases_dir = '../testcases/optim/'
-compile_cmd = "bash ../build.bash"
-execute_cmd = "bash ../semantic.bash"
+compile_cmd = "bash ./build.bash"
+execute_cmd = "bash ./semantic.bash"
 excluded_test_cases = ["foo.mx"]
 ravel_path = "ravel --enable-cache"
 builtin_path = "./builtin/builtin.s"
