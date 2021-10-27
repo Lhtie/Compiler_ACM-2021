@@ -138,8 +138,6 @@ public class SymbolCollector implements ASTVisitor {
         it.varDefArg.forEach(x -> {
             if (gScope.findClass(x.name))
                 throw new semanticError("Semantic Error: variable rename with class", x.pos);
-            if (currentScope instanceof globalScope && ((globalScope) currentScope).findFunc(x.name, false))
-                throw new semanticError("Semantic Error: variable rename with function", x.pos);
             currentScope.addVar(x.pos, x.name, type);
             if (x.isInitialized)
                 throw new semanticError("Semantic Error: cannot initialize in class", it.pos);

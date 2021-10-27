@@ -15,10 +15,12 @@ public class SemanticChecker implements ASTVisitor {
     private Scope currentScope;
     private Type retType;
     private FlowController flowController;
+    private boolean isFuncId;
 
     public SemanticChecker(globalScope scope){
         gScope = scope;
         currentScope = scope;
+        isFuncId = false;
     }
 
     private static boolean isCmpOp(binaryExprNode.binaryOpType Op){
@@ -98,8 +100,6 @@ public class SemanticChecker implements ASTVisitor {
         it.varDefArg.forEach(x -> {
             if (gScope.findClass(x.name))
                 throw new semanticError("Semantic Error: variable rename with class", x.pos);
-            if (currentScope instanceof globalScope && ((globalScope) currentScope).findFunc(x.name, false))
-                throw new semanticError("Semantic Error: variable rename with function", x.pos);
             if (x.isInitialized){
                 x.expr.accept(this);
                 type.assignChecker(x.pos, gScope, retType);
@@ -253,9 +253,11 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(funcCallExprNode it) {
+        isFuncId = true;
         it.expr.accept(this);
         if (retType.typeName != Type.typeToken.FUNC)
             throw new semanticError("Semantic Error: cannot call as a function", it.pos);
+        isFuncId = false;
         ArrayList<Type> funcParameters = retType.funcParameters;
         Type funcRetType = retType.funcRetType;
         if (it.argList.expr.size() != funcParameters.size())
@@ -271,9 +273,12 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(arrayExprNode it) {
+        boolean isFuncId_ = isFuncId;
+        isFuncId = false;
         it.index.accept(this);
         if (retType.typeName != Type.typeToken.INT || retType.dim > 0)
             throw new semanticError("Semantic Error: index need to be int", it.pos);
+        isFuncId = isFuncId_;
         it.title.accept(this);
         retType.dim--;
         if (retType.dim < 0)
@@ -285,9 +290,12 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(binaryExprNode it) {
         if (it.binaryOp == binaryExprNode.binaryOpType.DOT){
+            boolean isFuncId_ = isFuncId;
+            isFuncId = false;
             it.lhs.accept(this);
             if (!retType.referable())
                 throw new semanticError("Semantic Error: there is no inner content", it.pos);
+            isFuncId = isFuncId_;
             globalScope gScope_ = gScope;
             Scope currentScope_ = currentScope;
             if (retType.dim > 0)
@@ -403,14 +411,12 @@ public class SemanticChecker implements ASTVisitor {
         else if (it.primaryType == primaryNode.primaryTypeToken.STRING)
             retType = new Type(Type.typeToken.STRING, 0, false);
         else{
-            Scope ret = currentScope.containsKey(it.primaryCtx, true);
-            if (ret == null)
-                throw new semanticError("Semantic Error: cannot find identifier " + it.primaryCtx, it.pos);
-            else if (ret instanceof globalScope && ((globalScope) ret).findFunc(it.primaryCtx, false)) {
-                Type type = ((globalScope) ret).getRetTypeFromFunc(it.pos, it.primaryCtx);
-                ArrayList<Type> para = ((globalScope) ret).getParametersFromFunc(it.pos, it.primaryCtx);
+            if (isFuncId){
+                Type type = gScope.getRetTypeFromFunc(it.pos, it.primaryCtx);
+                ArrayList<Type> para = gScope.getParametersFromFunc(it.pos, it.primaryCtx);
                 retType = new Type(it.primaryCtx, type, para);
-            } else retType = new Type(ret.getType(it.pos, it.primaryCtx, false));
+            } else
+                retType = new Type(currentScope.getType(it.pos, it.primaryCtx, true));
         }
     }
 
