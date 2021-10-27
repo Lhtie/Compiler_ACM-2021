@@ -283,8 +283,6 @@ public class SemanticChecker implements ASTVisitor {
         retType.dim--;
         if (retType.dim < 0)
             throw new semanticError("Semantic Error: dimension not matched", it.pos);
-        if (retType.dim == 0)
-            retType.islValue = true;
     }
 
     @Override
@@ -427,8 +425,8 @@ public class SemanticChecker implements ASTVisitor {
     public void visit(creatorNode it) {
         Type type;
         if (it.classId != null)
-            type = new Type(it.classId, it.creatorSize.size(), false);
-        else type = new Type(it.basicType.basicType, it.creatorSize.size(), false);
+            type = new Type(it.classId, it.creatorSize.size(), true);
+        else type = new Type(it.basicType.basicType, it.creatorSize.size(), true);
         boolean hasExpr = true;
         for (int i = 0; i < it.creatorSize.size(); ++i){
             creatorSizeNode x = it.creatorSize.get(i);

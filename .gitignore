@@ -2,4 +2,6 @@
 /out
 /test.mx
 /local_judge.py
-/bin
+/tools/bin
+/tools/build.bash
+/tools/semantic.bash
