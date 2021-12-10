@@ -319,8 +319,10 @@ public class ASTBuilder extends MxStarBaseVisitor<ASTNode> {
             return new primaryNode(new position(ctx), primaryNode.primaryTypeToken.INT, ctx.INT_LITERAL().toString());
         else if (ctx.BOOL_LITERAL() != null)
             return new primaryNode(new position(ctx), primaryNode.primaryTypeToken.BOOL, ctx.BOOL_LITERAL().toString());
-        else if (ctx.STRING_LITERAL() != null)
-            return new primaryNode(new position(ctx), primaryNode.primaryTypeToken.STRING, ctx.STRING_LITERAL().toString());
+        else if (ctx.STRING_LITERAL() != null) {
+            String str = ctx.STRING_LITERAL().toString();
+            return new primaryNode(new position(ctx), primaryNode.primaryTypeToken.STRING, str.substring(1, str.length() - 1));
+        }
         else return new primaryNode(new position(ctx), primaryNode.primaryTypeToken.IDENTIFIER, ctx.IDENTIFIER().toString());
     }
 

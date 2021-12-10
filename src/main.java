@@ -1,9 +1,12 @@
 import AST.RootNode;
+import Backend.IRBuilder;
+import Backend.IRPrinter;
 import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
 import Grammars.MxStarParser;
 import Grammars.MxStarLexer;
+import LLVMIR.Module;
 import Util.*;
 import Util.error.*;
 
@@ -18,8 +21,8 @@ import java.io.InputStream;
 public class main {
     public static void main(String[] args) throws Exception{
         String name = "test.mx";
-//        InputStream raw = System.in;
-        InputStream raw = new FileInputStream(name);
+        InputStream raw = System.in;
+//        InputStream raw = new FileInputStream(name);
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
@@ -37,6 +40,11 @@ public class main {
             globalScope gScope = new globalScope();
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);
+
+            Module topModule = new Module();
+            new IRBuilder(gScope, topModule).visit(ASTRoot);
+            new IRPrinter(System.out).visitModule(topModule);
+
         } catch(error er) {
             System.err.println(er.toString());
             throw new RuntimeException();

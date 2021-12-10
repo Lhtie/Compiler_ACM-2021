@@ -1,18 +1,18 @@
 package LLVMIR.Entity;
 
-import LLVMIR.Type.IRType;
+import LLVMIR.Type.baseType;
 
-public class register extends Entity {
+public class label extends Entity{
     public String name;
 
-    public register(IRType type_, String name_){
-        super(type_);
+    public label(String name_){
+        super(new baseType(baseType.typeToken.LABEL));
         name = name_;
     }
 
     @Override
     public String getValue(){
-        return "%" + name;
+        return name;
     }
 
     @Override

@@ -1,14 +1,20 @@
 package LLVMIR.Stmt;
 
-import LLVMIR.Entity.*;
-import LLVMIR.IRType;
+import LLVMIR.Entity.Entity;
+import LLVMIR.Type.IRType;
 
 public class load extends Stmt{
-    public IRType type;
+    public IRType Type;
     public Entity rs, rd;
 
-    public load(String name, IRType type_, Entity rs_){
-        type = type_;
-        rs = new register(type_, name);
+    public load(Entity rd_, IRType Type_, Entity rs_){
+        rd = rd_;
+        Type = Type_;
+        rs = rs_;
+    }
+
+    @Override
+    public String toString(){
+        return rd.getValue() + " = load " + Type + ", " + rs;
     }
 }

@@ -1,5 +1,6 @@
 package Util;
 
+import LLVMIR.Entity.Entity;
 import Util.error.semanticError;
 
 import java.util.HashMap;
@@ -7,15 +8,18 @@ import java.util.HashMap;
 public class Scope {
     private HashMap<String, Type> members;
     private Scope parentScope;
+    private HashMap<String, Entity> regs;
 
     public Scope(){
         members = new HashMap<>();
         parentScope = null;
+        regs = new HashMap<>();
     }
 
     public Scope(Scope parentScope_){
         members = new HashMap<>();
         parentScope = parentScope_;
+        regs = new HashMap<>();
     }
 
     public Scope getParentScope(){
@@ -26,6 +30,10 @@ public class Scope {
         if (members.containsKey(name))
             throw new semanticError("Semantic Error: redefine variable " + name, pos);
         else members.put(name, type);
+    }
+
+    public void addRegister(String name, Entity reg){
+        regs.put(name, reg);
     }
 
     public Scope containsKey(String name, boolean lookUpon){
@@ -42,5 +50,13 @@ public class Scope {
         else if (parentScope != null && lookUpon)
             return parentScope.getType(pos, name, lookUpon);
         else throw new semanticError("Semantic Error: cannot find identifier " + name, pos);
+    }
+
+    public Entity getRegister(String name, boolean lookUpon){
+        if (regs.containsKey(name))
+            return regs.get(name);
+        else if (parentScope != null && lookUpon)
+            return parentScope.getRegister(name, lookUpon);
+        else return null;
     }
 }

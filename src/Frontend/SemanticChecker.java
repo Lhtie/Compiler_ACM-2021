@@ -313,7 +313,7 @@ public class SemanticChecker implements ASTVisitor {
             Type rhsType = retType;
             if (it.binaryOp == binaryExprNode.binaryOpType.ASSIGN) {
                 lhsType.assignChecker(it.rhs.pos, gScope, rhsType);
-                retType.islValue = false;
+                retType.islValue = true;
             } else {
                 if (lhsType.dim > 0 || lhsType.typeName == Type.typeToken.CLASS){
                     if (it.binaryOp != binaryExprNode.binaryOpType.NOT_EQ && it.binaryOp != binaryExprNode.binaryOpType.EQUALS)
