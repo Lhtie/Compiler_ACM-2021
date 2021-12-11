@@ -23,36 +23,6 @@ public class SemanticChecker implements ASTVisitor {
         isFuncId = false;
     }
 
-    private static boolean isCmpOp(binaryExprNode.binaryOpType Op){
-        return Op == binaryExprNode.binaryOpType.LESS_THAN
-                || Op == binaryExprNode.binaryOpType.GREATER_THAN
-                || Op == binaryExprNode.binaryOpType.LT_EQ
-                || Op == binaryExprNode.binaryOpType.GT_EQ
-                || Op == binaryExprNode.binaryOpType.EQUALS
-                || Op == binaryExprNode.binaryOpType.NOT_EQ
-                ;
-    }
-
-    private static boolean isArithOp(binaryExprNode.binaryOpType Op){
-        return Op == binaryExprNode.binaryOpType.STAR
-                || Op == binaryExprNode.binaryOpType.DIV
-                || Op == binaryExprNode.binaryOpType.MOD
-                || Op == binaryExprNode.binaryOpType.PLUS
-                || Op == binaryExprNode.binaryOpType.MINUS
-                || Op == binaryExprNode.binaryOpType.LEFT_SHIFT
-                || Op == binaryExprNode.binaryOpType.RIGHT_SHIFT
-                || Op == binaryExprNode.binaryOpType.AND_OP
-                || Op == binaryExprNode.binaryOpType.XOR_OP
-                || Op == binaryExprNode.binaryOpType.OR_OP
-                ;
-    }
-
-    private static boolean isLogicOp(binaryExprNode.binaryOpType Op){
-        return Op == binaryExprNode.binaryOpType.OR_LOG
-                || Op == binaryExprNode.binaryOpType.AND_LOG
-                ;
-    }
-
     @Override
     public void visit(RootNode it) {
         it.define.forEach(x -> x.accept(this));
@@ -330,22 +300,22 @@ public class SemanticChecker implements ASTVisitor {
                 } else {
                     if (lhsType.typeName == Type.typeToken.INT) {
                         lhsType.typeMatcher(it.pos, rhsType);
-                        if (isCmpOp(it.binaryOp))
+                        if (it.isCmpOp())
                             retType = new Type(Type.typeToken.BOOL, 0, false);
-                        else if (isArithOp(it.binaryOp))
+                        else if (it.isArithOp())
                             retType = new Type(Type.typeToken.INT, 0, false);
                         else throw new semanticError("Semantic Error: int can only compare and calc", it.pos);
                     } else if (lhsType.typeName == Type.typeToken.BOOL) {
                         lhsType.typeMatcher(it.pos, rhsType);
                         if (it.binaryOp == binaryExprNode.binaryOpType.NOT_EQ || it.binaryOp == binaryExprNode.binaryOpType.EQUALS
-                                || isLogicOp(it.binaryOp))
+                                || it.isLogicOp())
                             retType = new Type(Type.typeToken.BOOL, 0, false);
                         else throw new semanticError("Semantic Error: boolean can only compare with == or != and logic calc", it.pos);
                     } else if (lhsType.typeName == Type.typeToken.STRING){
                         lhsType.typeMatcher(it.pos, rhsType);
                         if (it.binaryOp == binaryExprNode.binaryOpType.PLUS)
                             retType = new Type(Type.typeToken.STRING, 0, false);
-                        else if(isCmpOp(it.binaryOp))
+                        else if(it.isCmpOp())
                             retType = new Type(Type.typeToken.BOOL, 0, false);
                         else throw new semanticError("Semantic Error: string can only plus or compare", it.pos);
                     } else if (lhsType.typeName == Type.typeToken.NULL) {

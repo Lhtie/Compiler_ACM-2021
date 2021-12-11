@@ -36,7 +36,7 @@ public class IRPrinter implements Pass{
         os.println(") {");
         visitBasicBlock(fn.entry);
         fn.blocks.forEach(x -> {
-            os.println(x.label.getValue());
+            os.println(x.label.getValue() + ":");
             visitBasicBlock(x);
         });
         os.println("}");

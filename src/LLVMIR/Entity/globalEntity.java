@@ -7,7 +7,7 @@ public class globalEntity extends Entity{
     public Boolean isConst;
 
     public globalEntity(IRType type, String name_, Boolean isConst_){
-        super(type);
+        super(true, type);
         name = name_;
         isConst = isConst_;
     }

@@ -7,9 +7,9 @@ public class load extends Stmt{
     public IRType Type;
     public Entity rs, rd;
 
-    public load(Entity rd_, IRType Type_, Entity rs_){
+    public load(Entity rd_, Entity rs_){
         rd = rd_;
-        Type = Type_;
+        Type = rd.type;
         rs = rs_;
     }
 

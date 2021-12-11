@@ -6,12 +6,14 @@ import LLVMIR.Type.IRType;
 import java.util.ArrayList;
 
 public class getelementptr extends Stmt{
+    boolean inbounds;
     public IRType type;
     public Entity rd, rs;
     public ArrayList<Entity> arrOffset;
     public ArrayList<Entity> classOffset;
 
-    public getelementptr(Entity rd_, IRType type_, Entity rs_){
+    public getelementptr(Entity rd_, boolean inbounds_, IRType type_, Entity rs_){
+        inbounds = inbounds_;
         type = type_;
         rd = rd_;
         rs = rs_;
@@ -30,7 +32,7 @@ public class getelementptr extends Stmt{
 
     @Override
     public String toString(){
-        String ret = rd.getValue() + " = getelementptr " + type + ", " + rs;
+        String ret = rd.getValue() + " = getelementptr " + (inbounds ? "inbounds " : null) + type + ", " + rs;
         assert(arrOffset.size() == classOffset.size() || arrOffset.size() == classOffset.size() + 1);
         for (int i = 0; i < arrOffset.size(); ++i){
             ret += ", " + arrOffset.get(i);

@@ -4,8 +4,10 @@ import LLVMIR.Type.IRType;
 
 public abstract class Entity {
     public IRType type;
+    public boolean islValue;
 
-    public Entity(IRType type_){
+    public Entity(boolean islValue_, IRType type_){
+        islValue = islValue_;
         type = type_;
     }
 

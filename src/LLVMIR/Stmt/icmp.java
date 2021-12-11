@@ -1,7 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
-import LLVMIR.Type.IRType;
+import AST.binaryExprNode;
 
 public class icmp extends Stmt{
     public enum compareType{
@@ -14,17 +14,24 @@ public class icmp extends Stmt{
     public compareType cmpType;
     public Entity lhs, rhs;
 
-    public icmp(Entity rd_, compareType cmpType_, Entity lhs_, Entity rhs_){
+    public icmp(Entity rd_, binaryExprNode.binaryOpType binaryOp, Entity lhs_, Entity rhs_){
         rd = rd_;
-        cmpType = cmpType_;
+        cmpType = switch (binaryOp){
+            case LESS_THAN -> compareType.SLT;
+            case GREATER_THAN -> compareType.SGT;
+            case LT_EQ -> compareType.SLE;
+            case GT_EQ -> compareType.SGE;
+            case EQUALS -> compareType.EQ;
+            case NOT_EQ -> compareType.NE;
+            default -> null;
+        };
         lhs = lhs_;
         rhs = rhs_;
     }
 
     @Override
     public String toString(){
-        assert(lhs.type == rhs.type);
-        return rd.getValue() + " = " + cmpType.name().toLowerCase()
+        return rd.getValue() + " = icmp " + cmpType.name().toLowerCase()
             + " " + lhs + ", " + rhs.getValue();
     }
 }

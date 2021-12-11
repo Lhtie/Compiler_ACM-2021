@@ -13,6 +13,7 @@ import LLVMIR.Type.*;
 import Util.Scope;
 import Util.Type;
 import Util.globalScope;
+import org.antlr.v4.runtime.atn.SemanticContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class IRBuilder implements ASTVisitor {
     private globalScope gScope;
     private Scope currentScope;
     private Module topModule;
+    private Function currentFn;
     private BasicBlock currentBlock;
     private int currentRegNum;
     private int currentStrNum;
@@ -35,15 +37,13 @@ public class IRBuilder implements ASTVisitor {
         gScope = scope;
         currentScope = scope;
         topModule = module;
-        currentRegNum = 0;
         currentStrNum = 0;
         isGlobalVarDef = false;
     }
 
     private Entity loadPtrType(Entity ptr) {
-        IRType type = ((ptrType) ptr.type).type;
-        register val = new register(type, Integer.toString(++currentRegNum));
-        currentBlock.stmts.add(new load(val, type, ptr));
+        register val = new register(false, ((ptrType) ptr.type).type, Integer.toString(++currentRegNum));
+        currentBlock.stmts.add(new load(val, ptr));
         return val;
     }
 
@@ -79,19 +79,26 @@ public class IRBuilder implements ASTVisitor {
         it.type.accept(this);
         for (int i = 0; i < it.varDefArg.size(); ++i) {
             varDefArgNode x = it.varDefArg.get(i);
-            Entity init = new constant(type, 0);
-            if (x.isInitialized) {
-                x.expr.accept(this);
-                init = retEntity;
-            }
             if (isGlobalVarDef) {
-                retEntity = new globalEntity(new ptrType(type), Integer.toString(++currentRegNum), false);
+                Entity init = new constant(type);
+                if (x.isInitialized) {
+                    x.expr.accept(this);
+                    init = retEntity;
+                }
+                retEntity = new globalEntity(new ptrType(type), x.name, false);
                 topModule.gVars.add(new global(retEntity, global.defineType.GLOBAL, init));
                 currentScope.addRegister(x.name, retEntity);
             } else {
-                retEntity = new register(new ptrType(type), Integer.toString(++currentRegNum));
-                currentBlock.stmts.add(new alloca(retEntity, type));
-                currentScope.addRegister(x.name, retEntity);
+                Entity res = new register(true, new ptrType(type), Integer.toString(++currentRegNum));
+                currentBlock.stmts.add(new alloca(res, type));
+                currentScope.addRegister(x.name, res);
+                if (x.isInitialized) {
+                    x.expr.accept(this);
+                    if (retEntity.islValue)
+                        retEntity = loadPtrType(retEntity);
+                    currentBlock.stmts.add(new store(retEntity, res));
+                }
+                retEntity = res;
             }
         }
     }
@@ -127,10 +134,10 @@ public class IRBuilder implements ASTVisitor {
         ArrayList<Entity> parameters = new ArrayList<>();
         it.parameterList.parameter.forEach(x -> {
             x.type.accept(this);
-            parameters.add(new register(type, x.name));
+            parameters.add(new register(false, type, x.name));
         });
-        currentBlock = new BasicBlock(it.name + " entry");
-        topModule.fns.add(new Function(retType, it.name, parameters, currentBlock));
+        currentBlock = new BasicBlock(Integer.toString(currentRegNum = 0));
+        topModule.fns.add(currentFn = new Function(retType, it.name, parameters, currentBlock));
 
         currentScope = gScope.getScopeFromFunc(it.pos, it.name);
         it.suite.accept(this);
@@ -163,37 +170,118 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ifStmtNode it) {
-
+        it.expr.accept(this);
+        if (retEntity.islValue)
+            retEntity = loadPtrType(retEntity);
+        if (retEntity instanceof constant){
+            if (((constant) retEntity).i1){
+                currentScope = new Scope(currentScope);
+                it.block.accept(this);
+                currentScope = currentScope.getParentScope();
+            } else {
+                it.elseStmt.accept(this);
+            }
+        } else {
+            Entity cmpRes = retEntity;
+            BasicBlock ob = currentBlock;
+            currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+            BasicBlock eb1 = currentBlock;
+            currentScope = new Scope(currentScope);
+            it.block.accept(this);
+            currentScope = currentScope.getParentScope();
+            BasicBlock b1 = currentBlock;
+            if (it.elseStmt == null){
+                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                ob.stmts.add(new br(cmpRes, eb1.label, currentBlock.label));
+                b1.stmts.add(new br(currentBlock.label));
+            } else {
+                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                BasicBlock eb2 = currentBlock;
+                it.elseStmt.accept(this);
+                BasicBlock b2 = currentBlock;
+                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                ob.stmts.add(new br(cmpRes, eb1.label, eb2.label));
+                b1.stmts.add(new br(currentBlock.label));
+                b2.stmts.add(new br(currentBlock.label));
+            }
+        }
     }
 
     @Override
     public void visit(elseStmtNode it) {
-
+        currentScope = new Scope(currentScope);
+        it.block.accept(this);
+        currentScope = currentScope.getParentScope();
     }
 
     @Override
     public void visit(whileStmtNode it) {
-
+        BasicBlock ob = currentBlock;
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        BasicBlock cbEntry = currentBlock;
+        ob.stmts.add(new br(cbEntry.label));
+        it.expr.accept(this);
+        if (retEntity.islValue)
+            retEntity = loadPtrType(retEntity);
+        Entity cond = retEntity;
+        BasicBlock cbExit = currentBlock;
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        BasicBlock bbEntry = currentBlock;
+        currentScope = new Scope(currentScope);
+        it.block.accept(this);
+        currentScope = currentScope.getParentScope();
+        currentBlock.stmts.add(new br(cbEntry.label));
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
     }
 
     @Override
     public void visit(forStmtNode it) {
-
+        currentScope = new Scope(currentScope);
+        if (it.forInit != null)
+            it.forInit.accept(this);
+        BasicBlock ob = currentBlock;
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        BasicBlock cbEntry = currentBlock;
+        ob.stmts.add(new br(cbEntry.label));
+        if (it.forStop != null)
+            it.forStop.accept(this);
+        Entity cond = retEntity;
+        BasicBlock cbExit = currentBlock;
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        BasicBlock bbEntry = currentBlock;
+        it.block.accept(this);
+        BasicBlock bbExit = currentBlock;
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        BasicBlock ibEntry = currentBlock;
+        bbExit.stmts.add(new br(ibEntry.label));
+        it.expr.accept(this);
+        BasicBlock ibExit = currentBlock;
+        ibExit.stmts.add(new br(cbEntry.label));
+        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
+        currentScope = currentScope.getParentScope();
     }
 
     @Override
     public void visit(forInitNode it) {
-
+        if (it.varDef != null)
+            it.varDef.accept(this);
+        if (it.expr != null)
+            it.expr.accept(this);
     }
 
     @Override
     public void visit(forStopNode it) {
-
+        it.expr.accept(this);
+        if (retEntity.islValue)
+            retEntity = loadPtrType(retEntity);
     }
 
     @Override
     public void visit(returnStmtNode it) {
-
+        it.expr.accept(this);
+        currentBlock.stmts.add(new ret(retEntity));
     }
 
     @Override
@@ -210,9 +298,10 @@ public class IRBuilder implements ASTVisitor {
     public void visit(preIncDecExprNode it) {
         it.expr.accept(this);
         Entity val = loadPtrType(retEntity);
-        register res = new register(type, Integer.toString(++currentRegNum));
+        IRType type = val.type;
+        register res = new register(false, type, Integer.toString(++currentRegNum));
         currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.ADD,
-                val, new constant(type, 1)));
+                val, new constant(type, it.preIncDecOp == preIncDecExprNode.preIncDecOpType.PLUSPLUS ? 1 : -1)));
         currentBlock.stmts.add(new store(res, retEntity));
     }
 
@@ -220,9 +309,10 @@ public class IRBuilder implements ASTVisitor {
     public void visit(postIncDecExprNode it) {
         it.expr.accept(this);
         Entity val = loadPtrType(retEntity);
-        register res = new register(type, Integer.toString(++currentRegNum));
+        IRType type = val.type;
+        register res = new register(false, type, Integer.toString(++currentRegNum));
         currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.ADD,
-                val, new constant(type, 1)));
+                val, new constant(type, it.postIncDecOp == postIncDecExprNode.postIncDecOpType.PLUSPLUS ? 1 : -1)));
         currentBlock.stmts.add(new store(res, retEntity));
         retEntity = val;
     }
@@ -234,32 +324,123 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(arrayExprNode it) {
-        
+        it.title.accept(this);
+        Entity arrPtr = loadPtrType(retEntity);
+        it.index.accept(this);
+        if (retEntity.islValue)
+            retEntity = loadPtrType(retEntity);
+        Entity offset = new register(false, new baseType(baseType.typeToken.I, 64),
+                Integer.toString(++currentRegNum));
+        currentBlock.stmts.add(new convertOp(convertOp.convertType.SEXT, offset, retEntity));
+        IRType type = ((ptrType) arrPtr.type).type;
+        Entity res = new register(true, arrPtr.type, Integer.toString(++currentRegNum));
+        getelementptr instr = new getelementptr(res, true, type, arrPtr);
+        instr.addOffset(offset);
+        currentBlock.stmts.add(instr);
+        retEntity = res;
     }
 
     @Override
     public void visit(unaryExprNode it) {
         it.expr.accept(this);
-        if (retEntity.type instanceof ptrType)
+        if (retEntity.islValue)
             retEntity = loadPtrType(retEntity);
         if (it.unaryOp == unaryExprNode.unaryOpType.MINUS) {
-            Entity res = new register(retEntity.type, Integer.toString(++currentRegNum));
-            currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.SUB,
-                    new constant(retEntity.type, 0), retEntity));
-            retEntity = res;
-        }
-        else if (it.unaryOp == unaryExprNode.unaryOpType.NOT_OP
+            if (retEntity instanceof constant){
+                retEntity = ((constant) retEntity).neg();
+            } else {
+                Entity res = new register(false, retEntity.type, Integer.toString(++currentRegNum));
+                currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.SUB,
+                        new constant(retEntity.type, 0), retEntity));
+                retEntity = res;
+            }
+        } else if (it.unaryOp == unaryExprNode.unaryOpType.NOT_OP
             || it.unaryOp == unaryExprNode.unaryOpType.NOT_LOG){
-            Entity res = new register(retEntity.type, Integer.toString(++currentRegNum));
-            currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.XOR,
-                    retEntity, new constant(retEntity.type, -1)));
-            retEntity = res;
+            if (retEntity instanceof constant){
+                retEntity = ((constant) retEntity).not();
+            } else {
+                Entity res = new register(false, retEntity.type, Integer.toString(++currentRegNum));
+                Entity oprand;
+                if (it.unaryOp == unaryExprNode.unaryOpType.NOT_OP)
+                    oprand = new constant(retEntity.type, -1);
+                else oprand = new constant(retEntity.type, true);
+                currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.XOR, retEntity, oprand));
+                retEntity = res;
+            }
         }
     }
 
     @Override
     public void visit(binaryExprNode it) {
-
+        if (it.binaryOp == binaryExprNode.binaryOpType.DOT){
+            // TODO: class element
+        } else if (it.binaryOp == binaryExprNode.binaryOpType.ASSIGN){
+            it.rhs.accept(this);
+            if (retEntity.islValue)
+                retEntity = loadPtrType(retEntity);
+            Entity res = retEntity;
+            it.lhs.accept(this);
+            currentBlock.stmts.add(new store(res, retEntity));
+        } else if (it.isCmpOp() || it.isArithOp()){
+            it.lhs.accept(this);
+            Entity l = retEntity;
+            it.rhs.accept(this);
+            Entity r = retEntity;
+            if (l.islValue) l = loadPtrType(l);
+            if (r.islValue) r = loadPtrType(r);
+            if (l instanceof constant && r instanceof constant){
+                retEntity = ((constant) l).binaryOp(it, r);
+            } else {
+                IRType type = it.isCmpOp() ? new baseType(baseType.typeToken.I, 1) : l.type;
+                retEntity = new register(false, type, Integer.toString(++currentRegNum));
+                if (it.isCmpOp())
+                    currentBlock.stmts.add(new icmp(retEntity, it.binaryOp, l, r));
+                else currentBlock.stmts.add(new binaryOp(retEntity, it.binaryOp, l, r));
+            }
+        } else { // isLogicOp
+            it.lhs.accept(this);
+            if (retEntity.islValue)
+                retEntity = loadPtrType(retEntity);
+            boolean determined = false;
+            if (retEntity instanceof constant){
+                if (it.binaryOp == binaryExprNode.binaryOpType.OR_LOG && ((constant) retEntity).i1){
+                    retEntity = new constant(new baseType(baseType.typeToken.I, 1), true);
+                    determined = true;
+                } else if (it.binaryOp == binaryExprNode.binaryOpType.AND_LOG && !((constant) retEntity).i1){
+                    retEntity = new constant(new baseType(baseType.typeToken.I, 1), false);
+                    determined = true;
+                }
+            }
+            if (!determined) {
+                Entity le = retEntity;
+                BasicBlock lb = currentBlock;
+                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                BasicBlock eb = currentBlock;
+                it.rhs.accept(this);
+                if (retEntity.islValue)
+                    retEntity = loadPtrType(retEntity);
+                Entity re = retEntity;
+                BasicBlock rb = currentBlock;
+                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                retEntity = new register(false, new baseType(baseType.typeToken.I, 1),
+                        Integer.toString(++currentRegNum));
+                if (it.binaryOp == binaryExprNode.binaryOpType.OR_LOG) {
+                    lb.stmts.add(new br(le, currentBlock.label, eb.label));
+                    rb.stmts.add(new br(currentBlock.label));
+                    phi instr = new phi(retEntity);
+                    instr.add(new constant(retEntity.type, true), lb.label);
+                    instr.add(re, rb.label);
+                    currentBlock.stmts.add(instr);
+                } else {
+                    lb.stmts.add(new br(le, eb.label, currentBlock.label));
+                    rb.stmts.add(new br(currentBlock.label));
+                    phi instr = new phi(retEntity);
+                    instr.add(new constant(retEntity.type, false), lb.label);
+                    instr.add(re, rb.label);
+                    currentBlock.stmts.add(instr);
+                }
+            }
+        }
     }
 
     @Override
@@ -270,12 +451,11 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(primaryNode it) {
         if (it.primaryType == primaryNode.primaryTypeToken.NULL)
-            retEntity = new constant(new ptrType(null), 0);
+            retEntity = new constant(new ptrType(null));
         else if (it.primaryType == primaryNode.primaryTypeToken.INT)
             retEntity = new constant(new baseType(baseType.typeToken.I, 32), Integer.parseInt(it.primaryCtx));
         else if (it.primaryType == primaryNode.primaryTypeToken.BOOL)
-            retEntity = new constant(new baseType(baseType.typeToken.I, 1),
-                    it.primaryCtx.equals("true") ? 1 : 0);
+            retEntity = new constant(new baseType(baseType.typeToken.I, 1), it.primaryCtx.equals("true"));
         else if (it.primaryType == primaryNode.primaryTypeToken.STRING){
             IRType i8 = new baseType(baseType.typeToken.I, 8);
             IRType arrType = new arrayType(it.primaryCtx.length() + 1, i8);
@@ -285,8 +465,8 @@ public class IRBuilder implements ASTVisitor {
                 strCollector.put(it.primaryCtx, strPtr);
             }
             else strPtr = strCollector.get(it.primaryCtx);
-            retEntity = new register(new ptrType(i8), Integer.toString(++currentRegNum));
-            getelementptr instr = new getelementptr(retEntity, arrType, strPtr);
+            retEntity = new register(false, new ptrType(i8), Integer.toString(++currentRegNum));
+            getelementptr instr = new getelementptr(retEntity, false, arrType, strPtr);
             instr.addOffset(new constant(new baseType(baseType.typeToken.I, 64), 0));
             currentBlock.stmts.add(instr);
         }

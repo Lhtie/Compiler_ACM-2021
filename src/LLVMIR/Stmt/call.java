@@ -11,9 +11,9 @@ public class call extends Stmt{
     public String funcName;
     public ArrayList<Entity> parameters;
 
-    public call(Entity rd_, IRType retType_, String funcName_){
+    public call(Entity rd_, String funcName_){
         rd = rd_;
-        retType = retType_;
+        retType = rd.type;
         funcName = funcName_;
         parameters = new ArrayList<>();
     }

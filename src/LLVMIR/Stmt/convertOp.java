@@ -12,11 +12,11 @@ public class convertOp extends Stmt{
     public Entity rd, rs;
     public IRType targetType;
 
-    public convertOp(convertType covType_, Entity rd_, Entity rs_, IRType targetType_){
+    public convertOp(convertType covType_, Entity rd_, Entity rs_){
         covType = covType_;
         rd = rd_;
         rs = rs_;
-        targetType = targetType_;
+        targetType = rd.type;
     }
 
     @Override

@@ -6,7 +6,7 @@ public class label extends Entity{
     public String name;
 
     public label(String name_){
-        super(new baseType(baseType.typeToken.LABEL));
+        super(false, new baseType(baseType.typeToken.LABEL));
         name = name_;
     }
 

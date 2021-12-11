@@ -5,8 +5,8 @@ import LLVMIR.Type.IRType;
 public class register extends Entity {
     public String name;
 
-    public register(IRType type_, String name_){
-        super(type_);
+    public register(boolean islValue_, IRType type_, String name_){
+        super(islValue_, type_);
         name = name_;
     }
 
