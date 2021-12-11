@@ -13,7 +13,6 @@ import LLVMIR.Type.*;
 import Util.Scope;
 import Util.Type;
 import Util.globalScope;
-import org.antlr.v4.runtime.atn.SemanticContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +20,7 @@ import java.util.Map;
 
 public class IRBuilder implements ASTVisitor {
     private HashMap<String, Entity> strCollector;
+    private ArrayList<BasicBlock> loopFlowCollector;
     private globalScope gScope;
     private Scope currentScope;
     private Module topModule;
@@ -164,8 +164,10 @@ public class IRBuilder implements ASTVisitor {
             currentScope = new Scope(currentScope);
             it.suite.accept(this);
             currentScope = currentScope.getParentScope();
-        } else if (it.stmt != null)
-            it.stmt.accept(this);
+        } else if (it.stmt != null) {
+            if (!currentBlock.branched)
+                it.stmt.accept(this);
+        }
     }
 
     @Override
@@ -193,7 +195,9 @@ public class IRBuilder implements ASTVisitor {
             if (it.elseStmt == null){
                 currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
                 ob.stmts.add(new br(cmpRes, eb1.label, currentBlock.label));
-                b1.stmts.add(new br(currentBlock.label));
+                if (!b1.branched)
+                    b1.stmts.add(new br(currentBlock.label));
+                else loopFlowCollector.add(b1);
             } else {
                 currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
                 BasicBlock eb2 = currentBlock;
@@ -201,8 +205,12 @@ public class IRBuilder implements ASTVisitor {
                 BasicBlock b2 = currentBlock;
                 currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
                 ob.stmts.add(new br(cmpRes, eb1.label, eb2.label));
-                b1.stmts.add(new br(currentBlock.label));
-                b2.stmts.add(new br(currentBlock.label));
+                if (!b1.branched)
+                    b1.stmts.add(new br(currentBlock.label));
+                else loopFlowCollector.add(b1);
+                if (!b2.branched)
+                    b2.stmts.add(new br(currentBlock.label));
+                else loopFlowCollector.add(b2);
             }
         }
     }
@@ -216,6 +224,8 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(whileStmtNode it) {
+        ArrayList<BasicBlock> LFC_backup = loopFlowCollector;
+        loopFlowCollector = new ArrayList<>();
         BasicBlock ob = currentBlock;
         currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
         BasicBlock cbEntry = currentBlock;
@@ -230,13 +240,25 @@ public class IRBuilder implements ASTVisitor {
         currentScope = new Scope(currentScope);
         it.block.accept(this);
         currentScope = currentScope.getParentScope();
-        currentBlock.stmts.add(new br(cbEntry.label));
+        BasicBlock bbExit = currentBlock;
         currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
         cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
+        if (!bbExit.branched)
+            bbExit.stmts.add(new br(cbEntry.label));
+        else loopFlowCollector.add(bbExit);
+        loopFlowCollector.forEach(x -> {
+            if (x.flowStatus == BasicBlock.flowStatusType.BREAK)
+                 x.stmts.add(new br(currentBlock.label));
+            else if (x.flowStatus == BasicBlock.flowStatusType.CONTINUE)
+                x.stmts.add(new br(cbEntry.label));
+        });
+        loopFlowCollector = LFC_backup;
     }
 
     @Override
     public void visit(forStmtNode it) {
+        ArrayList<BasicBlock> LFC_backup = loopFlowCollector;
+        loopFlowCollector = new ArrayList<>();
         currentScope = new Scope(currentScope);
         if (it.forInit != null)
             it.forInit.accept(this);
@@ -254,13 +276,25 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock bbExit = currentBlock;
         currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
         BasicBlock ibEntry = currentBlock;
-        bbExit.stmts.add(new br(ibEntry.label));
-        it.expr.accept(this);
+        if (it.expr != null)
+            it.expr.accept(this);
         BasicBlock ibExit = currentBlock;
         ibExit.stmts.add(new br(cbEntry.label));
         currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
-        cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
+        if (it.forStop != null)
+            cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
+        else cbExit.stmts.add(new br(bbEntry.label));
+        if (!bbExit.branched)
+            bbExit.stmts.add(new br(ibEntry.label));
+        else loopFlowCollector.add(bbExit);
+        loopFlowCollector.forEach(x -> {
+            if (x.flowStatus == BasicBlock.flowStatusType.BREAK)
+                x.stmts.add(new br(currentBlock.label));
+            else if (x.flowStatus == BasicBlock.flowStatusType.CONTINUE)
+                x.stmts.add(new br(ibEntry.label));
+        });
         currentScope = currentScope.getParentScope();
+        loopFlowCollector = LFC_backup;
     }
 
     @Override
@@ -282,16 +316,20 @@ public class IRBuilder implements ASTVisitor {
     public void visit(returnStmtNode it) {
         it.expr.accept(this);
         currentBlock.stmts.add(new ret(retEntity));
+        currentBlock.branched = true;
+        currentBlock.flowStatus = BasicBlock.flowStatusType.RETURN;
     }
 
     @Override
     public void visit(breakStmtNode it) {
-
+        currentBlock.branched = true;
+        currentBlock.flowStatus = BasicBlock.flowStatusType.BREAK;
     }
 
     @Override
     public void visit(continueStmtNode it) {
-
+        currentBlock.branched = true;
+        currentBlock.flowStatus = BasicBlock.flowStatusType.CONTINUE;
     }
 
     @Override
