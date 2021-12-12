@@ -9,6 +9,7 @@ public class primaryNode extends ExprNode{
 
     public primaryTypeToken primaryType;
     public String primaryCtx;
+    public boolean isFuncId;
 
     public primaryNode(position pos, primaryTypeToken primaryType_, String primaryCtx_){
         super(pos);

@@ -1,4 +1,5 @@
 import AST.RootNode;
+import Backend.IRCollector;
 import Backend.IRBuilder;
 import Backend.IRPrinter;
 import Frontend.ASTBuilder;
@@ -42,6 +43,7 @@ public class main {
             new SemanticChecker(gScope).visit(ASTRoot);
 
             Module topModule = new Module();
+            new IRCollector(gScope, topModule).visit(ASTRoot);
             new IRBuilder(gScope, topModule).visit(ASTRoot);
             new IRPrinter(System.out).visitModule(topModule);
 

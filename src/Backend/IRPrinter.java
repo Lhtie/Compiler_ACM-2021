@@ -18,17 +18,22 @@ public class IRPrinter implements Pass{
     @Override
     public void visitModule(Module module) {
         module.gVars.forEach(this::visitStmt);
+        module.cls.forEach(this::visitClass);
         module.fns.forEach(this::visitFunction);
     }
 
     @Override
     public void visitClass(Class cl) {
-
+        os.print("%" + cl.identifier + " = type { ");
+        for (int i = 0; i < cl.vars.size(); ++i){
+            if (i > 0) os.print(", ");
+            os.print(cl.vars.get(i));
+        }
     }
 
     @Override
     public void visitFunction(Function fn) {
-        os.print("define " + fn.retType + " " + "@" + fn.funcName + "(");
+        os.print("define " + fn.retType + " " + "@" + fn.identifier + "(");
         for (int i = 0; i < fn.parameters.size(); ++i){
             if (i > 0) os.print(", ");
             os.print(fn.parameters.get(i));

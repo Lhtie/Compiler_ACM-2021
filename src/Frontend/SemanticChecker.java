@@ -379,6 +379,7 @@ public class SemanticChecker implements ASTVisitor {
         else if (it.primaryType == primaryNode.primaryTypeToken.STRING)
             retType = new Type(Type.typeToken.STRING, 0, false);
         else{
+            it.isFuncId = isFuncId;
             if (isFuncId){
                 Type type = gScope.getRetTypeFromFunc(it.pos, it.primaryCtx);
                 ArrayList<Type> para = gScope.getParametersFromFunc(it.pos, it.primaryCtx);

@@ -1,5 +1,7 @@
 package Util;
 
+import LLVMIR.Class;
+import LLVMIR.Function;
 import Util.error.semanticError;
 
 import java.util.ArrayList;
@@ -11,6 +13,9 @@ public class globalScope extends Scope {
     private HashMap<String, Scope> funcScope = new HashMap<>();
     private HashMap<String, Type> funcRetType = new HashMap<>();
     private HashMap<String, ArrayList<Type>> funcParameters = new HashMap<>();
+
+    private HashMap<String, Class> classType = new HashMap<>();
+    private HashMap<String, Function> funcType = new HashMap<>();
 
     public globalScope() {
         identifier = "Global";
@@ -31,6 +36,10 @@ public class globalScope extends Scope {
         else classScope.put(name, scope);
     }
 
+    public void addClass(String name, Class cl){
+        classType.put(name, cl);
+    }
+
     public void addFunc(position pos, String name, Scope scope, Type retType, ArrayList<Type> parameters){
         if (funcScope.containsKey(name))
             throw new semanticError("Semantic Error: redefined funciton " + name, pos);
@@ -43,12 +52,24 @@ public class globalScope extends Scope {
         }
     }
 
+    public void addFunc(String name, Function fn){
+        funcType.put(name, fn);
+    }
+
     public Scope getScopeFromClass(position pos, String name){
         if (classScope.containsKey(name))
             return classScope.get(name);
         else if (this.getParentScope() != null)
             return ((globalScope) this.getParentScope()).getScopeFromClass(pos, name);
         else throw new semanticError("Semantic Error: cannot find class " + name, pos);
+    }
+
+    public Class getClass(String name){
+        if (classType.containsKey(name))
+            return classType.get(name);
+        else if (this.getParentScope() != null)
+            return ((globalScope) this.getParentScope()).getClass(name);
+        else return null;
     }
 
     public Scope getScopeFromFunc(position pos, String name){
@@ -73,6 +94,14 @@ public class globalScope extends Scope {
         else if (this.getParentScope() != null)
             return ((globalScope) this.getParentScope()).getParametersFromFunc(pos, name);
         else throw new semanticError("Semantic Error: cannot find function " + name, pos);
+    }
+
+    public Function getFunc(String name){
+        if (funcType.containsKey(name))
+            return funcType.get(name);
+        else if (this.getParentScope() != null)
+            return ((globalScope) this.getParentScope()).getFunc(name);
+        else return null;
     }
 
     public boolean findFunc(String name, boolean lookUpon){

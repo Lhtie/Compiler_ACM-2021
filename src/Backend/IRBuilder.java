@@ -26,14 +26,15 @@ public class IRBuilder implements ASTVisitor {
     private Module topModule;
     private Function currentFn;
     private BasicBlock currentBlock;
-    private int currentRegNum;
     private int currentStrNum;
     private Entity retEntity;
+    private Function retFunc;
     private Boolean isGlobalVarDef;
     private IRType type;
 
     public IRBuilder(globalScope scope, Module module){
         strCollector = new HashMap<>();
+        loopFlowCollector = new ArrayList<>();
         gScope = scope;
         currentScope = scope;
         topModule = module;
@@ -42,7 +43,7 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private Entity loadPtrType(Entity ptr) {
-        register val = new register(false, ((ptrType) ptr.type).type, Integer.toString(++currentRegNum));
+        register val = new register(false, ((ptrType) ptr.type).type, currentFn.getRegId());
         currentBlock.stmts.add(new load(val, ptr));
         return val;
     }
@@ -58,7 +59,12 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(classDefNode it) {
-
+        currentScope = ((globalScope)currentScope).getScopeFromClass(it.pos, it.name);
+        gScope = (globalScope) currentScope;
+        if (it.constructorDef != null)
+            it.constructorDef.accept(this);
+        it.funcDef.forEach(x -> x.accept(this));
+        currentScope = currentScope.getParentScope();
     }
 
     @Override
@@ -68,18 +74,17 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(globalVarDefNode it) {
-        Boolean tmp = isGlobalVarDef;
         isGlobalVarDef = true;
         it.varDef.accept(this);
-        isGlobalVarDef = tmp;
+        isGlobalVarDef = false;
     }
 
     @Override
     public void visit(varDefNode it) {
         it.type.accept(this);
-        for (int i = 0; i < it.varDefArg.size(); ++i) {
-            varDefArgNode x = it.varDefArg.get(i);
+        it.varDefArg.forEach(x -> {
             if (isGlobalVarDef) {
+                // TODO: global define initial
                 Entity init = new constant(type);
                 if (x.isInitialized) {
                     x.expr.accept(this);
@@ -89,7 +94,7 @@ public class IRBuilder implements ASTVisitor {
                 topModule.gVars.add(new global(retEntity, global.defineType.GLOBAL, init));
                 currentScope.addRegister(x.name, retEntity);
             } else {
-                Entity res = new register(true, new ptrType(type), Integer.toString(++currentRegNum));
+                Entity res = new register(true, new ptrType(type), currentFn.getRegId());
                 currentBlock.stmts.add(new alloca(res, type));
                 currentScope.addRegister(x.name, res);
                 if (x.isInitialized) {
@@ -98,9 +103,8 @@ public class IRBuilder implements ASTVisitor {
                         retEntity = loadPtrType(retEntity);
                     currentBlock.stmts.add(new store(retEntity, res));
                 }
-                retEntity = res;
             }
-        }
+        });
     }
 
     @Override
@@ -110,10 +114,11 @@ public class IRBuilder implements ASTVisitor {
                 type = new baseType(baseType.typeToken.I, 1);
             else if (it.basicType.basicType == Type.typeToken.INT)
                 type = new baseType(baseType.typeToken.I, 32);
-            else type = new ptrType(new baseType(baseType.typeToken.I, 8)); // STRING
-            for (int i = 0; i < it.dim; ++i)
-                type = new ptrType(type);
-        } else type = new classType(it.classId);
+            else // if (it.basicType.basicType == Type.typeToken.STRING)
+                type = new ptrType(new baseType(baseType.typeToken.I, 8));
+        } else type = new classType(gScope.getClass(it.classId));
+        for (int i = 0; i < it.dim; ++i)
+            type = new ptrType(type);
     }
 
     @Override
@@ -124,34 +129,36 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(funcDefNode it) {
-        IRType retType;
-        if (it.funcType.isVoid)
-            retType = new baseType(baseType.typeToken.VOID);
-        else {
-            it.funcType.type.accept(this);
-            retType = type;
-        }
-        ArrayList<Entity> parameters = new ArrayList<>();
-        it.parameterList.parameter.forEach(x -> {
-            x.type.accept(this);
-            parameters.add(new register(false, type, x.name));
-        });
-        currentBlock = new BasicBlock(Integer.toString(currentRegNum = 0));
-        topModule.fns.add(currentFn = new Function(retType, it.name, parameters, currentBlock));
+        currentFn = gScope.getFunc(it.name);
+        currentBlock = currentFn.entry;
 
         currentScope = gScope.getScopeFromFunc(it.pos, it.name);
+        it.parameterList.accept(this);
         it.suite.accept(this);
         currentScope = currentScope.getParentScope();
+
+        if (!currentBlock.branched){
+            Entity ret = new constant(currentFn.retType);
+            currentBlock.stmts.add(new ret(ret));
+        }
     }
 
     @Override
     public void visit(funcTypeNode it) {}
 
     @Override
-    public void visit(parameterListNode it) {}
+    public void visit(parameterListNode it) {
+        it.parameter.forEach(x -> x.accept(this));
+    }
 
     @Override
-    public void visit(parameterNode it) {}
+    public void visit(parameterNode it) {
+        Entity val = currentScope.getRegister(it.name, false);
+        Entity ptr = new register(true, new ptrType(val.type), currentFn.getRegId());
+        currentBlock.stmts.add(new alloca(ptr, val.type));
+        currentBlock.stmts.add(new store(val, ptr));
+        currentScope.addRegister(it.name, ptr);
+    }
 
     @Override
     public void visit(suiteNode it) {
@@ -186,24 +193,24 @@ public class IRBuilder implements ASTVisitor {
         } else {
             Entity cmpRes = retEntity;
             BasicBlock ob = currentBlock;
-            currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+            currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
             BasicBlock eb1 = currentBlock;
             currentScope = new Scope(currentScope);
             it.block.accept(this);
             currentScope = currentScope.getParentScope();
             BasicBlock b1 = currentBlock;
             if (it.elseStmt == null){
-                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
                 ob.stmts.add(new br(cmpRes, eb1.label, currentBlock.label));
                 if (!b1.branched)
                     b1.stmts.add(new br(currentBlock.label));
                 else loopFlowCollector.add(b1);
             } else {
-                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
                 BasicBlock eb2 = currentBlock;
                 it.elseStmt.accept(this);
                 BasicBlock b2 = currentBlock;
-                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
                 ob.stmts.add(new br(cmpRes, eb1.label, eb2.label));
                 if (!b1.branched)
                     b1.stmts.add(new br(currentBlock.label));
@@ -227,7 +234,7 @@ public class IRBuilder implements ASTVisitor {
         ArrayList<BasicBlock> LFC_backup = loopFlowCollector;
         loopFlowCollector = new ArrayList<>();
         BasicBlock ob = currentBlock;
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         BasicBlock cbEntry = currentBlock;
         ob.stmts.add(new br(cbEntry.label));
         it.expr.accept(this);
@@ -235,13 +242,13 @@ public class IRBuilder implements ASTVisitor {
             retEntity = loadPtrType(retEntity);
         Entity cond = retEntity;
         BasicBlock cbExit = currentBlock;
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         BasicBlock bbEntry = currentBlock;
         currentScope = new Scope(currentScope);
         it.block.accept(this);
         currentScope = currentScope.getParentScope();
         BasicBlock bbExit = currentBlock;
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
         if (!bbExit.branched)
             bbExit.stmts.add(new br(cbEntry.label));
@@ -263,24 +270,24 @@ public class IRBuilder implements ASTVisitor {
         if (it.forInit != null)
             it.forInit.accept(this);
         BasicBlock ob = currentBlock;
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         BasicBlock cbEntry = currentBlock;
         ob.stmts.add(new br(cbEntry.label));
         if (it.forStop != null)
             it.forStop.accept(this);
         Entity cond = retEntity;
         BasicBlock cbExit = currentBlock;
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         BasicBlock bbEntry = currentBlock;
         it.block.accept(this);
         BasicBlock bbExit = currentBlock;
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         BasicBlock ibEntry = currentBlock;
         if (it.expr != null)
             it.expr.accept(this);
         BasicBlock ibExit = currentBlock;
         ibExit.stmts.add(new br(cbEntry.label));
-        currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         if (it.forStop != null)
             cbExit.stmts.add(new br(cond, bbEntry.label, currentBlock.label));
         else cbExit.stmts.add(new br(bbEntry.label));
@@ -314,8 +321,13 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(returnStmtNode it) {
-        it.expr.accept(this);
-        currentBlock.stmts.add(new ret(retEntity));
+        if (it.expr != null) {
+            it.expr.accept(this);
+            if (retEntity.islValue)
+                retEntity = loadPtrType(retEntity);
+            currentBlock.stmts.add(new ret(retEntity));
+        } else
+            currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
         currentBlock.branched = true;
         currentBlock.flowStatus = BasicBlock.flowStatusType.RETURN;
     }
@@ -337,7 +349,7 @@ public class IRBuilder implements ASTVisitor {
         it.expr.accept(this);
         Entity val = loadPtrType(retEntity);
         IRType type = val.type;
-        register res = new register(false, type, Integer.toString(++currentRegNum));
+        register res = new register(false, type, currentFn.getRegId());
         currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.ADD,
                 val, new constant(type, it.preIncDecOp == preIncDecExprNode.preIncDecOpType.PLUSPLUS ? 1 : -1)));
         currentBlock.stmts.add(new store(res, retEntity));
@@ -348,7 +360,7 @@ public class IRBuilder implements ASTVisitor {
         it.expr.accept(this);
         Entity val = loadPtrType(retEntity);
         IRType type = val.type;
-        register res = new register(false, type, Integer.toString(++currentRegNum));
+        register res = new register(false, type, currentFn.getRegId());
         currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.ADD,
                 val, new constant(type, it.postIncDecOp == postIncDecExprNode.postIncDecOpType.PLUSPLUS ? 1 : -1)));
         currentBlock.stmts.add(new store(res, retEntity));
@@ -357,7 +369,15 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(funcCallExprNode it) {
-
+        it.expr.accept(this);
+        Entity res = new register(false, retFunc.retType, currentFn.getRegId());
+        call instr = new call(res, retFunc);
+        it.argList.expr.forEach(x -> {
+            x.accept(this);
+            instr.parameters.add(retEntity);
+        });
+        currentBlock.stmts.add(instr);
+        retEntity = res;
     }
 
     @Override
@@ -368,10 +388,10 @@ public class IRBuilder implements ASTVisitor {
         if (retEntity.islValue)
             retEntity = loadPtrType(retEntity);
         Entity offset = new register(false, new baseType(baseType.typeToken.I, 64),
-                Integer.toString(++currentRegNum));
+                currentFn.getRegId());
         currentBlock.stmts.add(new convertOp(convertOp.convertType.SEXT, offset, retEntity));
         IRType type = ((ptrType) arrPtr.type).type;
-        Entity res = new register(true, arrPtr.type, Integer.toString(++currentRegNum));
+        Entity res = new register(true, arrPtr.type, currentFn.getRegId());
         getelementptr instr = new getelementptr(res, true, type, arrPtr);
         instr.addOffset(offset);
         currentBlock.stmts.add(instr);
@@ -387,7 +407,7 @@ public class IRBuilder implements ASTVisitor {
             if (retEntity instanceof constant){
                 retEntity = ((constant) retEntity).neg();
             } else {
-                Entity res = new register(false, retEntity.type, Integer.toString(++currentRegNum));
+                Entity res = new register(false, retEntity.type, currentFn.getRegId());
                 currentBlock.stmts.add(new binaryOp(res, binaryOp.binaryOpType.SUB,
                         new constant(retEntity.type, 0), retEntity));
                 retEntity = res;
@@ -397,7 +417,7 @@ public class IRBuilder implements ASTVisitor {
             if (retEntity instanceof constant){
                 retEntity = ((constant) retEntity).not();
             } else {
-                Entity res = new register(false, retEntity.type, Integer.toString(++currentRegNum));
+                Entity res = new register(false, retEntity.type, currentFn.getRegId());
                 Entity oprand;
                 if (it.unaryOp == unaryExprNode.unaryOpType.NOT_OP)
                     oprand = new constant(retEntity.type, -1);
@@ -430,7 +450,7 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = ((constant) l).binaryOp(it, r);
             } else {
                 IRType type = it.isCmpOp() ? new baseType(baseType.typeToken.I, 1) : l.type;
-                retEntity = new register(false, type, Integer.toString(++currentRegNum));
+                retEntity = new register(false, type, currentFn.getRegId());
                 if (it.isCmpOp())
                     currentBlock.stmts.add(new icmp(retEntity, it.binaryOp, l, r));
                 else currentBlock.stmts.add(new binaryOp(retEntity, it.binaryOp, l, r));
@@ -452,16 +472,16 @@ public class IRBuilder implements ASTVisitor {
             if (!determined) {
                 Entity le = retEntity;
                 BasicBlock lb = currentBlock;
-                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
                 BasicBlock eb = currentBlock;
                 it.rhs.accept(this);
                 if (retEntity.islValue)
                     retEntity = loadPtrType(retEntity);
                 Entity re = retEntity;
                 BasicBlock rb = currentBlock;
-                currentFn.blocks.add(currentBlock = new BasicBlock(Integer.toString(++currentRegNum)));
+                currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
                 retEntity = new register(false, new baseType(baseType.typeToken.I, 1),
-                        Integer.toString(++currentRegNum));
+                        currentFn.getRegId());
                 if (it.binaryOp == binaryExprNode.binaryOpType.OR_LOG) {
                     lb.stmts.add(new br(le, currentBlock.label, eb.label));
                     rb.stmts.add(new br(currentBlock.label));
@@ -488,7 +508,9 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(primaryNode it) {
-        if (it.primaryType == primaryNode.primaryTypeToken.NULL)
+        if (it.primaryType == primaryNode.primaryTypeToken.THIS)
+            retEntity = loadPtrType(currentFn.parameters.get(0));
+        else if (it.primaryType == primaryNode.primaryTypeToken.NULL)
             retEntity = new constant(new ptrType(null));
         else if (it.primaryType == primaryNode.primaryTypeToken.INT)
             retEntity = new constant(new baseType(baseType.typeToken.I, 32), Integer.parseInt(it.primaryCtx));
@@ -503,21 +525,20 @@ public class IRBuilder implements ASTVisitor {
                 strCollector.put(it.primaryCtx, strPtr);
             }
             else strPtr = strCollector.get(it.primaryCtx);
-            retEntity = new register(false, new ptrType(i8), Integer.toString(++currentRegNum));
+            retEntity = new register(false, new ptrType(i8), currentFn.getRegId());
             getelementptr instr = new getelementptr(retEntity, false, arrType, strPtr);
             instr.addOffset(new constant(new baseType(baseType.typeToken.I, 64), 0));
             currentBlock.stmts.add(instr);
         }
         else {  // identifier
-            retEntity = currentScope.getRegister(it.primaryCtx, true);
-            // TODO: add function call identifier
+            if (it.isFuncId) {
+                retFunc = gScope.getFunc(it.primaryCtx);
+            } else retEntity = currentScope.getRegister(it.primaryCtx, true);
         }
     }
 
     @Override
-    public void visit(argListNode it) {
-
-    }
+    public void visit(argListNode it) {}
 
     @Override
     public void visit(creatorNode it) {

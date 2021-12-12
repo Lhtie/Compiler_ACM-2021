@@ -8,6 +8,7 @@ import java.util.HashMap;
 public class Scope {
     private HashMap<String, Type> members;
     private Scope parentScope;
+
     private HashMap<String, Entity> regs;
 
     public Scope(){

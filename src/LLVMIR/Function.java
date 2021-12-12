@@ -6,17 +6,24 @@ import LLVMIR.Type.IRType;
 import java.util.ArrayList;
 
 public class Function {
+    public int regNum;
     public IRType retType;
-    public String funcName;
+    public String identifier;
     public ArrayList<Entity> parameters;
     public BasicBlock entry;
     public ArrayList<BasicBlock> blocks;
 
-    public Function(IRType retType_, String funcName_, ArrayList<Entity> parameters_, BasicBlock entry_){
+    public Function(int regNum_, IRType retType_, String identifier_,
+                    ArrayList<Entity> parameters_, BasicBlock entry_){
+        regNum = regNum_;
         retType = retType_;
-        funcName = funcName_;
+        identifier = identifier_;
         parameters = parameters_;
         entry = entry_;
         blocks = new ArrayList<>();
+    }
+
+    public String getRegId(){
+        return Integer.toString(regNum++);
     }
 }

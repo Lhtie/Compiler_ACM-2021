@@ -1,18 +1,16 @@
 package LLVMIR.Type;
 
-import java.util.ArrayList;
+import LLVMIR.Class;
 
 public class classType extends IRType{
-    public String className;
-    public ArrayList<IRType> innerTypes;
+    public String identifier;
 
-    public classType(String className_){
-        className = className_;
-        innerTypes = new ArrayList<>();
+    public classType(Class cl){
+        identifier = cl.identifier;
     }
 
     @Override
     public String toString(){
-        return "%" + className;
+        return "%" + identifier;
     }
 }
