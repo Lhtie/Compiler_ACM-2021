@@ -10,6 +10,7 @@ public class Class {
     public ArrayList<IRType> vars;
     public ArrayList<Function> fns;
     public HashMap<String, Integer> ctx;
+    public long bytes = 0;
 
     public Class(String identifier_){
         identifier = identifier_;

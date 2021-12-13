@@ -7,11 +7,11 @@ import LLVMIR.Entity.Entity;
 import LLVMIR.Entity.register;
 import LLVMIR.Function;
 import LLVMIR.Module;
-import LLVMIR.Stmt.constStmt;
 import LLVMIR.Type.IRType;
 import LLVMIR.Type.baseType;
 import LLVMIR.Type.ptrType;
 import LLVMIR.Type.classType;
+import LLVMIR.Type.arrayType;
 import Util.Scope;
 import Util.Type;
 import Util.globalScope;
@@ -96,6 +96,11 @@ public class IRCollector implements ASTVisitor {
         it.varDefArg.forEach(x -> {
             currentClass.ctx.put(x.name, currentClass.vars.size());
             currentClass.vars.add(type);
+            if (type instanceof baseType) {
+                int iN = ((baseType) type).i_N;
+                currentClass.bytes += iN == 1 ? 1 : iN / 8;
+            } else // if (type instanceof ptrType)
+                currentClass.bytes += 8;
         });
     }
 
@@ -111,7 +116,7 @@ public class IRCollector implements ASTVisitor {
                 type = new baseType(baseType.typeToken.I, 32);
             else // if (it.basicType.basicType == Type.typeToken.STRING)
                 type = new ptrType(new baseType(baseType.typeToken.I, 8));
-        } else type = new classType(gScope.getClass(it.classId));
+        } else type = new ptrType(new classType(gScope.getClass(it.classId)));
         for (int i = 0; i < it.dim; ++i)
             type = new ptrType(type);
     }

@@ -14,6 +14,7 @@ import Util.Scope;
 import Util.Type;
 import Util.globalScope;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +56,12 @@ public class IRBuilder implements ASTVisitor {
         topModule.gVars.add(new constStmt("@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @__cxx_global_var_init, i8* null }]"));
         globalVarInitFn = new Function(1, new baseType(baseType.typeToken.VOID), "__cxx_global_var_init", new ArrayList<>(), new BasicBlock("0"));
         topModule.fns.add(globalVarInitFn);
+        declare instr = new declare(new ptrType(new baseType(baseType.typeToken.I, 8)), "_Znwm");
+        instr.parameters.add(new baseType(baseType.typeToken.I, 64));
+        topModule.gVars.add(instr);
+        instr = new declare(new ptrType(new baseType(baseType.typeToken.I, 8)), "_Znam");
+        instr.parameters.add(new baseType(baseType.typeToken.I, 64));
+        topModule.gVars.add(instr);
 
         it.define.forEach(x -> x.accept(this));
         for (Map.Entry<String, Entity> entry : strCollector.entrySet()){
@@ -71,6 +78,15 @@ public class IRBuilder implements ASTVisitor {
         gScope = (globalScope) currentScope;
         if (it.constructorDef != null)
             it.constructorDef.accept(this);
+        else {
+            ArrayList<Entity> parameters = new ArrayList<>();
+            parameters.add(new register(false, new ptrType(new classType(gScope.currentClass)), "0"));
+            BasicBlock block = new BasicBlock("1");
+            block.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
+            Function fn = new Function(2, new baseType(baseType.typeToken.VOID),
+                    "class." + it.name, parameters, block);
+            topModule.fns.add(fn);
+        }
         it.funcDef.forEach(x -> x.accept(this));
         gScope = (globalScope) gScope.getParentScope();
         currentScope = currentScope.getParentScope();
@@ -148,7 +164,7 @@ public class IRBuilder implements ASTVisitor {
                 type = new baseType(baseType.typeToken.I, 32);
             else // if (it.basicType.basicType == Type.typeToken.STRING)
                 type = new ptrType(new baseType(baseType.typeToken.I, 8));
-        } else type = new classType(gScope.getClass(it.classId));
+        } else type = new ptrType(new classType(gScope.getClass(it.classId)));
         for (int i = 0; i < it.dim; ++i)
             type = new ptrType(type);
     }
@@ -413,7 +429,9 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = loadPtrType(retEntity);
             parameters.add(retEntity);
         });
-        retEntity = new register(false, retFunc.retType, currentFn.getRegId());
+        if (retFunc.retType instanceof baseType && ((baseType) retFunc.retType).typeName == baseType.typeToken.VOID)
+            retEntity = null;
+        else retEntity = new register(false, retFunc.retType, currentFn.getRegId());
         call instr = new call(retEntity, retFunc, parameters);
         currentBlock.stmts.add(instr);
     }
@@ -470,6 +488,8 @@ public class IRBuilder implements ASTVisitor {
     public void visit(binaryExprNode it) {
         if (it.binaryOp == binaryExprNode.binaryOpType.DOT){
             it.lhs.accept(this);
+            if (retEntity.islValue)
+                retEntity = loadPtrType(retEntity);
             globalScope gScope_ = gScope;
             Scope currentScope_ = currentScope;
             currentScope = gScope.getScopeFromClass(it.pos,
