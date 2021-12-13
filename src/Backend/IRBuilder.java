@@ -29,8 +29,10 @@ public class IRBuilder implements ASTVisitor {
     private int currentStrNum;
     private Entity retEntity;
     private Function retFunc;
-    private Boolean isGlobalVarDef;
     private IRType type;
+
+    private Boolean isGlobalVarDef;
+    private Function globalVarInitFn;
 
     public IRBuilder(globalScope scope, Module module){
         strCollector = new HashMap<>();
@@ -50,11 +52,17 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
+        topModule.gVars.add(new constStmt("@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @__cxx_global_var_init, i8* null }]"));
+        globalVarInitFn = new Function(1, new baseType(baseType.typeToken.VOID), "__cxx_global_var_init", new ArrayList<>(), new BasicBlock("0"));
+        topModule.fns.add(globalVarInitFn);
+
         it.define.forEach(x -> x.accept(this));
         for (Map.Entry<String, Entity> entry : strCollector.entrySet()){
             topModule.gVars.add(new global(entry.getValue(), global.defineType.CONSTANT,
                     new constant(((ptrType) entry.getValue().type).type, entry.getKey())));
         }
+
+        globalVarInitFn.entry.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
     }
 
     @Override
@@ -70,7 +78,22 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(constructorDefNode it) {
-
+        currentScope = new Scope(currentScope);
+        int regNum = 0;
+        ArrayList<Entity> parameters = new ArrayList<>();
+        parameters.add(new register(false, new ptrType(new classType(gScope.currentClass)),
+                Integer.toString(regNum++)));
+        gScope.classEntity = parameters.get(0);
+        currentBlock = new BasicBlock(Integer.toString(regNum++));
+        currentFn = new Function(regNum, new baseType(baseType.typeToken.VOID),
+                "class." + it.name, parameters, currentBlock);
+        topModule.fns.add(currentFn);
+        it.suite.accept(this);
+        if (!currentBlock.branched){
+            Entity ret = new constant(currentFn.retType);
+            currentBlock.stmts.add(new ret(ret));
+        }
+        currentScope = currentScope.getParentScope();
     }
 
     @Override
@@ -85,15 +108,23 @@ public class IRBuilder implements ASTVisitor {
         it.type.accept(this);
         it.varDefArg.forEach(x -> {
             if (isGlobalVarDef) {
-                // TODO: global define initial
-                Entity init = new constant(type);
-                if (x.isInitialized) {
+                Entity res = new globalEntity(new ptrType(type), x.name, false);
+                topModule.gVars.add(new global(res, global.defineType.GLOBAL, new constant(type)));
+                currentScope.addRegister(x.name, res);
+                if (x.isInitialized){
+                    currentBlock = new BasicBlock("0");
+                    Function fn = new Function(1, new baseType(baseType.typeToken.VOID),
+                            "__cxx_global_var_init." + globalVarInitFn.getRegId(),
+                            new ArrayList<>(), currentBlock);
+                    currentFn = fn;
+                    globalVarInitFn.entry.stmts.add(new call(null, fn, new ArrayList<>()));
                     x.expr.accept(this);
-                    init = retEntity;
+                    if (retEntity.islValue)
+                        retEntity = loadPtrType(retEntity);
+                    currentBlock.stmts.add(new store(retEntity, res));
+                    currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
+                    topModule.fns.add(fn);
                 }
-                retEntity = new globalEntity(new ptrType(type), x.name, false);
-                topModule.gVars.add(new global(retEntity, global.defineType.GLOBAL, init));
-                currentScope.addRegister(x.name, retEntity);
             } else {
                 Entity res = new register(true, new ptrType(type), currentFn.getRegId());
                 currentBlock.stmts.add(new alloca(res, type));
@@ -454,6 +485,8 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = loadPtrType(retEntity);
             Entity res = retEntity;
             it.lhs.accept(this);
+            if (res instanceof constant)
+                res.type = ((ptrType) retEntity.type).type;
             currentBlock.stmts.add(new store(res, retEntity));
         } else if (it.isCmpOp() || it.isArithOp()){
             it.lhs.accept(this);

@@ -32,7 +32,7 @@ public class getelementptr extends Stmt{
 
     @Override
     public String toString(){
-        String ret = rd.getValue() + " = getelementptr " + (inbounds ? "inbounds " : null) + type + ", " + rs;
+        String ret = rd.getValue() + " = getelementptr " + (inbounds ? "inbounds " : "") + type + ", " + rs;
         assert(arrOffset.size() == classOffset.size() || arrOffset.size() == classOffset.size() + 1);
         for (int i = 0; i < arrOffset.size(); ++i){
             ret += ", " + arrOffset.get(i);
