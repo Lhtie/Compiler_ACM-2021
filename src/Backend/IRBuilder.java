@@ -64,6 +64,7 @@ public class IRBuilder implements ASTVisitor {
         if (it.constructorDef != null)
             it.constructorDef.accept(this);
         it.funcDef.forEach(x -> x.accept(this));
+        gScope = (globalScope) gScope.getParentScope();
         currentScope = currentScope.getParentScope();
     }
 
@@ -131,6 +132,8 @@ public class IRBuilder implements ASTVisitor {
     public void visit(funcDefNode it) {
         currentFn = gScope.getFunc(it.name);
         currentBlock = currentFn.entry;
+        if (gScope.getParentScope() != null)
+            gScope.classEntity = currentFn.parameters.get(0);
 
         currentScope = gScope.getScopeFromFunc(it.pos, it.name);
         it.parameterList.accept(this);
@@ -153,7 +156,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(parameterNode it) {
-        Entity val = currentScope.getRegister(it.name, false);
+        Entity val = currentScope.getRegister(it.name, false, currentBlock, currentFn);
         Entity ptr = new register(true, new ptrType(val.type), currentFn.getRegId());
         currentBlock.stmts.add(new alloca(ptr, val.type));
         currentBlock.stmts.add(new store(val, ptr));
@@ -370,14 +373,18 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(funcCallExprNode it) {
         it.expr.accept(this);
-        Entity res = new register(false, retFunc.retType, currentFn.getRegId());
-        call instr = new call(res, retFunc);
+        ArrayList<Entity> parameters = new ArrayList<>();
+        if (retFunc.identifier.startsWith("class."))
+            parameters.add(retEntity);
         it.argList.expr.forEach(x -> {
             x.accept(this);
-            instr.parameters.add(retEntity);
+            if (retEntity.islValue)
+                retEntity = loadPtrType(retEntity);
+            parameters.add(retEntity);
         });
+        retEntity = new register(false, retFunc.retType, currentFn.getRegId());
+        call instr = new call(retEntity, retFunc, parameters);
         currentBlock.stmts.add(instr);
-        retEntity = res;
     }
 
     @Override
@@ -431,7 +438,16 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(binaryExprNode it) {
         if (it.binaryOp == binaryExprNode.binaryOpType.DOT){
-            // TODO: class element
+            it.lhs.accept(this);
+            globalScope gScope_ = gScope;
+            Scope currentScope_ = currentScope;
+            currentScope = gScope.getScopeFromClass(it.pos,
+                    ((classType) ((ptrType) retEntity.type).type).className);
+            gScope = (globalScope) currentScope;
+            gScope.classEntity = retEntity;
+            it.rhs.accept(this);
+            currentScope = currentScope_;
+            gScope = gScope_;
         } else if (it.binaryOp == binaryExprNode.binaryOpType.ASSIGN){
             it.rhs.accept(this);
             if (retEntity.islValue)
@@ -509,7 +525,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(primaryNode it) {
         if (it.primaryType == primaryNode.primaryTypeToken.THIS)
-            retEntity = loadPtrType(currentFn.parameters.get(0));
+            retEntity = currentFn.parameters.get(0);
         else if (it.primaryType == primaryNode.primaryTypeToken.NULL)
             retEntity = new constant(new ptrType(null));
         else if (it.primaryType == primaryNode.primaryTypeToken.INT)
@@ -533,7 +549,7 @@ public class IRBuilder implements ASTVisitor {
         else {  // identifier
             if (it.isFuncId) {
                 retFunc = gScope.getFunc(it.primaryCtx);
-            } else retEntity = currentScope.getRegister(it.primaryCtx, true);
+            } else retEntity = currentScope.getRegister(it.primaryCtx, true, currentBlock, currentFn);
         }
     }
 

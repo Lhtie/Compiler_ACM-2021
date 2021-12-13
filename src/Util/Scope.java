@@ -1,6 +1,8 @@
 package Util;
 
+import LLVMIR.BasicBlock;
 import LLVMIR.Entity.Entity;
+import LLVMIR.Function;
 import Util.error.semanticError;
 
 import java.util.HashMap;
@@ -53,11 +55,11 @@ public class Scope {
         else throw new semanticError("Semantic Error: cannot find identifier " + name, pos);
     }
 
-    public Entity getRegister(String name, boolean lookUpon){
+    public Entity getRegister(String name, boolean lookUpon, BasicBlock block, Function fn){
         if (regs.containsKey(name))
             return regs.get(name);
         else if (parentScope != null && lookUpon)
-            return parentScope.getRegister(name, lookUpon);
+            return parentScope.getRegister(name, lookUpon, block, fn);
         else return null;
     }
 }

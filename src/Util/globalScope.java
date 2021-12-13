@@ -1,7 +1,14 @@
 package Util;
 
+import LLVMIR.BasicBlock;
 import LLVMIR.Class;
+import LLVMIR.Entity.Entity;
+import LLVMIR.Entity.constant;
+import LLVMIR.Entity.register;
 import LLVMIR.Function;
+import LLVMIR.Stmt.getelementptr;
+import LLVMIR.Type.baseType;
+import LLVMIR.Type.ptrType;
 import Util.error.semanticError;
 
 import java.util.ArrayList;
@@ -9,6 +16,8 @@ import java.util.HashMap;
 
 public class globalScope extends Scope {
     public String identifier;
+    public Class currentClass;
+    public Entity classEntity;
     private HashMap<String, globalScope> classScope = new HashMap<>();
     private HashMap<String, Scope> funcScope = new HashMap<>();
     private HashMap<String, Type> funcRetType = new HashMap<>();
@@ -18,6 +27,7 @@ public class globalScope extends Scope {
     private HashMap<String, Function> funcType = new HashMap<>();
 
     public globalScope() {
+        super(null);
         identifier = "Global";
     }
 
@@ -118,6 +128,26 @@ public class globalScope extends Scope {
         else if (this.getParentScope() != null)
             return ((globalScope) this.getParentScope()).findClass(name);
         else return false;
+    }
+
+    @Override
+    public Entity getRegister(String name, boolean lookUpon, BasicBlock block, Function fn){
+        if (getParentScope() == null)
+            return super.getRegister(name, lookUpon, block, fn);
+        else {
+            if (currentClass.ctx.containsKey(name)){
+                int tar = currentClass.ctx.get(name);
+                Entity ret = new register(true, new ptrType(currentClass.vars.get(tar)), fn.getRegId());
+                Entity src = classEntity;
+                getelementptr instr = new getelementptr(ret, true, ((ptrType) src.type).type, src);
+                instr.addOffset(new constant(new baseType(baseType.typeToken.I, 32)),
+                    new constant(new baseType(baseType.typeToken.I, 32), tar));
+                block.stmts.add(instr);
+                return ret;
+            } else if (this.getParentScope() != null && lookUpon)
+                return this.getParentScope().getRegister(name, lookUpon, block, fn);
+            else return null;
+        }
     }
 
     @Override

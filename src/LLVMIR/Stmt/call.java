@@ -12,11 +12,11 @@ public class call extends Stmt{
     public String identifier;
     public ArrayList<Entity> parameters;
 
-    public call(Entity rd_, Function fn){
+    public call(Entity rd_, Function fn, ArrayList<Entity> parameters_){
         rd = rd_;
         retType = rd.type;
         identifier = fn.identifier;
-        parameters = new ArrayList<>();
+        parameters = parameters_;
     }
 
     @Override

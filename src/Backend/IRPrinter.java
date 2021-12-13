@@ -29,6 +29,7 @@ public class IRPrinter implements Pass{
             if (i > 0) os.print(", ");
             os.print(cl.vars.get(i));
         }
+        os.println(" }");
     }
 
     @Override

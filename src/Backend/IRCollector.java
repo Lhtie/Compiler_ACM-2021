@@ -61,6 +61,7 @@ public class IRCollector implements ASTVisitor {
         currentClass = ((globalScope) currentScope).getClass(it.name);
         currentScope = ((globalScope) currentScope).getScopeFromClass(it.pos, it.name);
         gScope = (globalScope) currentScope;
+        ((globalScope) currentScope).currentClass = currentClass;
         it.funcDef.forEach(x -> x.accept(this));
         it.varDef.forEach(x -> x.accept(this));
         gScope = (globalScope) gScope.getParentScope();
