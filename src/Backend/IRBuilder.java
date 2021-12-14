@@ -443,9 +443,15 @@ public class IRBuilder implements ASTVisitor {
         it.index.accept(this);
         if (retEntity.islValue)
             retEntity = loadPtrType(retEntity);
-        Entity offset = new register(false, new baseType(baseType.typeToken.I, 64),
-                currentFn.getRegId());
-        currentBlock.stmts.add(new convertOp(convertOp.convertType.SEXT, offset, retEntity));
+        Entity offset;
+        if (retEntity instanceof constant){
+            offset = retEntity;
+            offset.type = new baseType(baseType.typeToken.I, 64);
+        } else {
+            offset = new register(false, new baseType(baseType.typeToken.I, 64),
+                    currentFn.getRegId());
+            currentBlock.stmts.add(new convertOp(convertOp.convertType.SEXT, offset, retEntity));
+        }
         IRType type = ((ptrType) arrPtr.type).type;
         Entity res = new register(true, arrPtr.type, currentFn.getRegId());
         getelementptr instr = new getelementptr(res, true, type, arrPtr);

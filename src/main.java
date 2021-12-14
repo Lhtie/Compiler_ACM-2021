@@ -22,8 +22,8 @@ import java.io.InputStream;
 public class main {
     public static void main(String[] args) throws Exception{
         String name = "test.mx";
-        InputStream raw = System.in;
-//        InputStream raw = new FileInputStream(name);
+//        InputStream raw = System.in;
+        InputStream raw = new FileInputStream(name);
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
