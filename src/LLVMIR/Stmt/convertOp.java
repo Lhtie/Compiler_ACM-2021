@@ -5,7 +5,7 @@ import LLVMIR.Type.IRType;
 
 public class convertOp extends Stmt{
     public enum convertType{
-        TRUNC, ZEXT, SEXT
+        TRUNC, ZEXT, SEXT, BITCAST
     }
 
     public convertType covType;

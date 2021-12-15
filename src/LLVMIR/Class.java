@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Class {
+    public String className;
     public String identifier;
     public ArrayList<IRType> vars;
     public ArrayList<Function> fns;
@@ -13,6 +14,7 @@ public class Class {
     public long bytes = 0;
 
     public Class(String identifier_){
+        className = identifier_.substring(6);
         identifier = identifier_;
         vars = new ArrayList<>();
         fns = new ArrayList<>();

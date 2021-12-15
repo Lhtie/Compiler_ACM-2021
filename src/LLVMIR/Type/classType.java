@@ -7,7 +7,7 @@ public class classType extends IRType{
     public String identifier;
 
     public classType(Class cl){
-        className = cl.identifier.substring(6);
+        className = cl.className;
         identifier = cl.identifier;
     }
 

@@ -15,7 +15,7 @@ public class call extends Stmt{
 
     public call(Entity rd_, Function fn, ArrayList<Entity> parameters_){
         rd = rd_;
-        retType = rd == null ? new baseType(baseType.typeToken.VOID) : rd.type;
+        retType = rd == null ? new baseType(baseType.typeToken.VOID) : fn.retType;
         identifier = fn.identifier;
         parameters = parameters_;
     }

@@ -2,6 +2,7 @@ package Backend;
 
 import AST.*;
 import LLVMIR.BasicBlock;
+import LLVMIR.Class;
 import LLVMIR.Entity.Entity;
 import LLVMIR.Entity.constant;
 import LLVMIR.Entity.globalEntity;
@@ -14,10 +15,7 @@ import Util.Scope;
 import Util.Type;
 import Util.globalScope;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class IRBuilder implements ASTVisitor {
     private HashMap<String, Entity> strCollector;
@@ -56,12 +54,12 @@ public class IRBuilder implements ASTVisitor {
         topModule.gVars.add(new constStmt("@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @__cxx_global_var_init, i8* null }]"));
         globalVarInitFn = new Function(1, new baseType(baseType.typeToken.VOID), "__cxx_global_var_init", new ArrayList<>(), new BasicBlock("0"));
         topModule.fns.add(globalVarInitFn);
-        declare instr = new declare(new ptrType(new baseType(baseType.typeToken.I, 8)), "_Znwm");
-        instr.parameters.add(new baseType(baseType.typeToken.I, 64));
-        topModule.gVars.add(instr);
-        instr = new declare(new ptrType(new baseType(baseType.typeToken.I, 8)), "_Znam");
-        instr.parameters.add(new baseType(baseType.typeToken.I, 64));
-        topModule.gVars.add(instr);
+        ArrayList<Entity> parameters = new ArrayList<>();
+        parameters.add(new register(false, new baseType(baseType.typeToken.I, 64), "0"));
+        Function fn = new Function(2, new ptrType(new baseType(baseType.typeToken.I, 8)),
+                "malloc", parameters, new BasicBlock("1"));
+        gScope.addFunc("malloc", fn);
+        topModule.gVars.add(new declare(fn));
 
         it.define.forEach(x -> x.accept(this));
         for (Map.Entry<String, Entity> entry : strCollector.entrySet()){
@@ -104,6 +102,7 @@ public class IRBuilder implements ASTVisitor {
         currentFn = new Function(regNum, new baseType(baseType.typeToken.VOID),
                 "class." + it.name, parameters, currentBlock);
         topModule.fns.add(currentFn);
+        gScope.addFunc(currentFn.identifier, currentFn);
         it.suite.accept(this);
         if (!currentBlock.branched){
             Entity ret = new constant(currentFn.retType);
@@ -615,15 +614,103 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(argListNode it) {}
 
+    private Entity mallocArray(ArrayList<Entity> creatorSize, int cur, IRType base){
+        int dim = creatorSize.size() - cur;
+        Entity size = creatorSize.get(cur), bytes;
+        long baseBytes = base instanceof ptrType ? 8 : ((baseType) base).i_N == 1 ? 1 : 4;
+        if (size instanceof constant tmp)
+            bytes = new constant(new baseType(baseType.typeToken.I, 64),
+                    (tmp.constType == constant.constantType.I32 ? tmp.i32 : tmp.i64) * baseBytes);
+        else {
+            if (((baseType) size.type).i_N == 32) {
+                Entity tmp = size;
+                size = new register(false, new baseType(baseType.typeToken.I, 64), currentFn.getRegId());
+                currentBlock.stmts.add(new convertOp(convertOp.convertType.SEXT, size, tmp));
+            }
+            bytes = new register(false, size.type, currentFn.getRegId());
+            currentBlock.stmts.add(new binaryOp(bytes, binaryOp.binaryOpType.MUL, size,
+                    new constant(new baseType(baseType.typeToken.I, 64), baseBytes)));
+        }
+        Entity ptr = new register(false, new ptrType(new baseType(baseType.typeToken.I, 8)),
+                currentFn.getRegId());
+        ArrayList<Entity> parameters = new ArrayList<>(List.of(bytes));
+        currentBlock.stmts.add(new call(ptr, gScope.getFunc("malloc"), parameters));
+        IRType type = base;
+        for (int i = 0; i < dim; ++i)
+            type = new ptrType(type);
+        Entity begin = new register(false, type, currentFn.getRegId());
+        currentBlock.stmts.add(new convertOp(convertOp.convertType.BITCAST, begin, ptr));
+        if (dim <= 1)
+            return begin;
+        Entity end = new register(false, type, currentFn.getRegId());
+        getelementptr instr = new getelementptr(end, true, ((ptrType) type).type, begin);
+        instr.addOffset(size);
+        currentBlock.stmts.add(instr);
+        BasicBlock ob = currentBlock;
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
+        BasicBlock bbEntry = currentBlock;
+        Entity phiRes = new register(false, type, currentFn.getRegId());
+        currentBlock.stmts.add(new phi(phiRes));
+        Entity ctx = mallocArray(creatorSize, cur + 1, base);
+        BasicBlock bbExit = currentBlock;
+        currentBlock.stmts.add(new store(ctx, phiRes));
+        Entity nxt = new register(false, type, currentFn.getRegId());
+        instr = new getelementptr(nxt, true, ((ptrType) type).type, phiRes);
+        instr.addOffset(new constant(new baseType(baseType.typeToken.I, 64), 1));
+        currentBlock.stmts.add(instr);
+        Entity cmp = new register(false, new baseType(baseType.typeToken.I, 1), currentFn.getRegId());
+        currentBlock.stmts.add(new icmp(cmp, icmp.compareType.EQ, nxt, end));
+        currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
+        ob.stmts.add(new br(bbEntry.label));
+        phi phi = (phi) bbEntry.stmts.get(0);
+        phi.add(begin, ob.label);
+        phi.add(nxt, bbExit.label);
+        bbExit.stmts.add(new br(cmp, currentBlock.label, bbEntry.label));
+        return begin;
+    }
+
     @Override
     public void visit(creatorNode it) {
-
+        if (it.creatorSize.size() == 0){    // new class
+            assert(it.classId != null);
+            Class cl = gScope.getClass(it.classId);
+            Entity ptr = new register(false, new ptrType(new baseType(baseType.typeToken.I, 8)),
+                    currentFn.getRegId());
+            ArrayList<Entity> parameters = new ArrayList<>();
+            parameters.add(new constant(new baseType(baseType.typeToken.I, 64), cl.bytes));
+            currentBlock.stmts.add(new call(ptr, gScope.getFunc("malloc"), parameters));
+            retEntity = new register(false, new ptrType(new classType(cl)), currentFn.getRegId());
+            currentBlock.stmts.add(new convertOp(convertOp.convertType.BITCAST, retEntity, ptr));
+            globalScope classScope = (globalScope) gScope.getScopeFromClass(it.pos, cl.className);
+            parameters = new ArrayList<>(List.of(retEntity));
+            currentBlock.stmts.add(new call(null, classScope.getFunc(cl.identifier), parameters));
+        } else {    // new array
+            IRType type;
+            if (it.classId != null)
+                type = new ptrType(new classType(gScope.getClass(it.classId)));
+            else if (it.basicType.basicType == Type.typeToken.STRING)
+                type = new ptrType(new baseType(baseType.typeToken.I, 8));
+            else if (it.basicType.basicType == Type.typeToken.BOOL)
+                type = new baseType(baseType.typeToken.I, 1);
+            else    // it.basicType.basicType == Type.typeToken.INT
+                type = new baseType(baseType.typeToken.I, 32);
+            ArrayList<Entity> creatorSize = new ArrayList<>();
+            it.creatorSize.forEach(x -> {
+                if (x.expr == null)
+                    return ;
+                x.expr.accept(this);
+                if (retEntity.islValue)
+                    retEntity = loadPtrType(retEntity);
+                creatorSize.add(retEntity);
+            });
+            for (int i = creatorSize.size(); i < it.creatorSize.size(); ++i)
+                type = new ptrType(type);
+            retEntity = mallocArray(creatorSize, 0, type);
+        }
     }
 
     @Override
-    public void visit(creatorSizeNode it) {
-
-    }
+    public void visit(creatorSizeNode it) {}
 
     @Override
     public void visit(lambdaStmtNode it) {}

@@ -29,6 +29,13 @@ public class icmp extends Stmt{
         rhs = rhs_;
     }
 
+    public icmp(Entity rd_, compareType cmpType_, Entity lhs_, Entity rhs_){
+        rd = rd_;
+        cmpType = cmpType_;
+        lhs = lhs_;
+        rhs = rhs_;
+    }
+
     @Override
     public String toString(){
         return rd.getValue() + " = icmp " + cmpType.name().toLowerCase()
