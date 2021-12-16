@@ -48,6 +48,8 @@ public class globalScope extends Scope {
 
     public void addClass(String name, Class cl){
         classType.put(name, cl);
+        if (!classScope.containsKey(name))
+            classScope.put(name, null);
     }
 
     public void addFunc(position pos, String name, Scope scope, Type retType, ArrayList<Type> parameters){
@@ -64,6 +66,8 @@ public class globalScope extends Scope {
 
     public void addFunc(String name, Function fn){
         funcType.put(name, fn);
+        if (!funcScope.containsKey(name))
+            funcScope.put(name, null);
     }
 
     public Scope getScopeFromClass(position pos, String name){

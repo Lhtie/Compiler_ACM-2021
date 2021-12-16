@@ -418,6 +418,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(funcCallExprNode it) {
+        retEntity = gScope.classEntity;
         it.expr.accept(this);
         ArrayList<Entity> parameters = new ArrayList<>();
         if (retFuncInCl)
@@ -502,8 +503,10 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = res;
             }
             gScope = (globalScope) currentScope;
+            Entity classEntity_ = gScope.classEntity;
             gScope.classEntity = retEntity;
             it.rhs.accept(this);
+            gScope.classEntity = classEntity_;
             currentScope = currentScope_;
             gScope = gScope_;
         } else if (it.binaryOp == binaryExprNode.binaryOpType.ASSIGN){
@@ -631,8 +634,8 @@ public class IRBuilder implements ASTVisitor {
         }
         else {  // identifier
             if (it.isFuncId) {
+                retFuncInCl = gScope.findFunc(it.primaryCtx, false) && gScope.getParentScope() != null;
                 retFunc = gScope.getFunc(it.primaryCtx);
-                retFuncInCl = gScope.getParentScope() != null;
             } else retEntity = currentScope.getRegister(it.primaryCtx, true, currentBlock, currentFn);
         }
     }
@@ -643,7 +646,9 @@ public class IRBuilder implements ASTVisitor {
     private Entity mallocArray(ArrayList<Entity> creatorSize, int cur, IRType base){
         int dim = creatorSize.size() - cur;
         Entity size = creatorSize.get(cur), bytes;
-        long baseBytes = base instanceof ptrType ? 8 : ((baseType) base).i_N == 1 ? 1 : 4;
+        long baseBytes = 8;
+        if (dim <= 1)
+            baseBytes = base instanceof ptrType ? 8 : ((baseType) base).i_N == 1 ? 1 : 4;
         if (size instanceof constant tmp)
             bytes = new constant(new baseType(baseType.typeToken.I, 64),
                     (tmp.constType == constant.constantType.I32 ? tmp.i32 : tmp.i64) * baseBytes + 4);

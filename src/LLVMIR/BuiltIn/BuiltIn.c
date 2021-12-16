@@ -44,13 +44,25 @@ int getInt(){
 }
 
 char *toString(int i){
+    int neg = false;
+    if (i < 0) neg = true, i = -i;
     char *ret = (char *) malloc(sizeof(char));
     *ret = '\0';
-    for (int len = 1; i; i /= 10){
+    int len = 1;
+    do {
         char *tmp = (char *) malloc(sizeof(char) * (++len));
         tmp[1] = '\0';
         strcpy(tmp + 1, ret);
         tmp[0] = (char) (i % 10 + '0');
+        free(ret);
+        ret = tmp;
+        i /= 10;
+    } while (i);
+    if (neg){
+        char *tmp = (char *) malloc(sizeof(char) * (++len));
+        tmp[1] = '\0';
+        strcpy(tmp + 1, ret);
+        tmp[0] = '-';
         free(ret);
         ret = tmp;
     }
@@ -84,12 +96,14 @@ char *string_subString(char *str, int left, int right){
 
 int string_parseInt(char *str){
     int ret = 0;
+    bool neg = false;
+    if (*str == '-') neg = true, str++;
     for (; *str != '\0'; ++str) {
         if (isdigit(*str))
             ret = ret * 10 + (*str - '0');
         else break;
     }
-    return ret;
+    return ret * (neg ? -1 : 1);
 }
 
 int string_ord(char *str, int pos){

@@ -133,59 +133,100 @@ declare dso_local i32 @__isoc99_scanf(i8*, ...) #1
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i8* @toString(i32 %0) #0 {
   %2 = alloca i32, align 4
-  %3 = alloca i8*, align 8
-  %4 = alloca i32, align 4
-  %5 = alloca i8*, align 8
+  %3 = alloca i32, align 4
+  %4 = alloca i8*, align 8
+  %5 = alloca i32, align 4
+  %6 = alloca i8*, align 8
+  %7 = alloca i8*, align 8
   store i32 %0, i32* %2, align 4
-  %6 = call noalias i8* @malloc(i64 1) #5
-  store i8* %6, i8** %3, align 8
-  %7 = load i8*, i8** %3, align 8
-  store i8 0, i8* %7, align 1
-  store i32 1, i32* %4, align 4
-  br label %8
+  store i32 0, i32* %3, align 4
+  %8 = load i32, i32* %2, align 4
+  %9 = icmp slt i32 %8, 0
+  br i1 %9, label %10, label %13
 
-8:                                                ; preds = %31, %1
-  %9 = load i32, i32* %2, align 4
-  %10 = icmp ne i32 %9, 0
-  br i1 %10, label %11, label %34
+10:                                               ; preds = %1
+  store i32 1, i32* %3, align 4
+  %11 = load i32, i32* %2, align 4
+  %12 = sub nsw i32 0, %11
+  store i32 %12, i32* %2, align 4
+  br label %13
 
-11:                                               ; preds = %8
-  %12 = load i32, i32* %4, align 4
-  %13 = add nsw i32 %12, 1
-  store i32 %13, i32* %4, align 4
-  %14 = sext i32 %13 to i64
-  %15 = mul i64 1, %14
-  %16 = call noalias i8* @malloc(i64 %15) #5
-  store i8* %16, i8** %5, align 8
-  %17 = load i8*, i8** %5, align 8
-  %18 = getelementptr inbounds i8, i8* %17, i64 1
-  store i8 0, i8* %18, align 1
-  %19 = load i8*, i8** %5, align 8
-  %20 = getelementptr inbounds i8, i8* %19, i64 1
-  %21 = load i8*, i8** %3, align 8
-  %22 = call i8* @strcpy(i8* %20, i8* %21) #5
-  %23 = load i32, i32* %2, align 4
-  %24 = srem i32 %23, 10
-  %25 = add nsw i32 %24, 48
-  %26 = trunc i32 %25 to i8
-  %27 = load i8*, i8** %5, align 8
-  %28 = getelementptr inbounds i8, i8* %27, i64 0
-  store i8 %26, i8* %28, align 1
-  %29 = load i8*, i8** %3, align 8
-  call void @free(i8* %29) #5
-  %30 = load i8*, i8** %5, align 8
-  store i8* %30, i8** %3, align 8
-  br label %31
+13:                                               ; preds = %10, %1
+  %14 = call noalias i8* @malloc(i64 1) #5
+  store i8* %14, i8** %4, align 8
+  %15 = load i8*, i8** %4, align 8
+  store i8 0, i8* %15, align 1
+  store i32 1, i32* %5, align 4
+  br label %16
 
-31:                                               ; preds = %11
-  %32 = load i32, i32* %2, align 4
-  %33 = sdiv i32 %32, 10
-  store i32 %33, i32* %2, align 4
-  br label %8
+16:                                               ; preds = %38, %13
+  %17 = load i32, i32* %5, align 4
+  %18 = add nsw i32 %17, 1
+  store i32 %18, i32* %5, align 4
+  %19 = sext i32 %18 to i64
+  %20 = mul i64 1, %19
+  %21 = call noalias i8* @malloc(i64 %20) #5
+  store i8* %21, i8** %6, align 8
+  %22 = load i8*, i8** %6, align 8
+  %23 = getelementptr inbounds i8, i8* %22, i64 1
+  store i8 0, i8* %23, align 1
+  %24 = load i8*, i8** %6, align 8
+  %25 = getelementptr inbounds i8, i8* %24, i64 1
+  %26 = load i8*, i8** %4, align 8
+  %27 = call i8* @strcpy(i8* %25, i8* %26) #5
+  %28 = load i32, i32* %2, align 4
+  %29 = srem i32 %28, 10
+  %30 = add nsw i32 %29, 48
+  %31 = trunc i32 %30 to i8
+  %32 = load i8*, i8** %6, align 8
+  %33 = getelementptr inbounds i8, i8* %32, i64 0
+  store i8 %31, i8* %33, align 1
+  %34 = load i8*, i8** %4, align 8
+  call void @free(i8* %34) #5
+  %35 = load i8*, i8** %6, align 8
+  store i8* %35, i8** %4, align 8
+  %36 = load i32, i32* %2, align 4
+  %37 = sdiv i32 %36, 10
+  store i32 %37, i32* %2, align 4
+  br label %38
 
-34:                                               ; preds = %8
-  %35 = load i8*, i8** %3, align 8
-  ret i8* %35
+38:                                               ; preds = %16
+  %39 = load i32, i32* %2, align 4
+  %40 = icmp ne i32 %39, 0
+  br i1 %40, label %16, label %41
+
+41:                                               ; preds = %38
+  %42 = load i32, i32* %3, align 4
+  %43 = icmp ne i32 %42, 0
+  br i1 %43, label %44, label %60
+
+44:                                               ; preds = %41
+  %45 = load i32, i32* %5, align 4
+  %46 = add nsw i32 %45, 1
+  store i32 %46, i32* %5, align 4
+  %47 = sext i32 %46 to i64
+  %48 = mul i64 1, %47
+  %49 = call noalias i8* @malloc(i64 %48) #5
+  store i8* %49, i8** %7, align 8
+  %50 = load i8*, i8** %7, align 8
+  %51 = getelementptr inbounds i8, i8* %50, i64 1
+  store i8 0, i8* %51, align 1
+  %52 = load i8*, i8** %7, align 8
+  %53 = getelementptr inbounds i8, i8* %52, i64 1
+  %54 = load i8*, i8** %4, align 8
+  %55 = call i8* @strcpy(i8* %53, i8* %54) #5
+  %56 = load i8*, i8** %7, align 8
+  %57 = getelementptr inbounds i8, i8* %56, i64 0
+  store i8 45, i8* %57, align 1
+  %58 = load i8*, i8** %4, align 8
+  call void @free(i8* %58) #5
+  %59 = load i8*, i8** %7, align 8
+  store i8* %59, i8** %4, align 8
+  br label %60
+
+60:                                               ; preds = %44, %41
+  %61 = load i8*, i8** %4, align 8
+  ret i8* %61
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
@@ -310,57 +351,78 @@ define dso_local i8* @string_subString(i8* %0, i32 %1, i32 %2) #0 {
 define dso_local i32 @string_parseInt(i8* %0) #0 {
   %2 = alloca i8*, align 8
   %3 = alloca i32, align 4
+  %4 = alloca i8, align 1
   store i8* %0, i8** %2, align 8
   store i32 0, i32* %3, align 4
-  br label %4
-
-4:                                                ; preds = %31, %1
+  store i8 0, i8* %4, align 1
   %5 = load i8*, i8** %2, align 8
   %6 = load i8, i8* %5, align 1
   %7 = sext i8 %6 to i32
-  %8 = icmp ne i32 %7, 0
-  br i1 %8, label %9, label %34
+  %8 = icmp eq i32 %7, 45
+  br i1 %8, label %9, label %12
 
-9:                                                ; preds = %4
-  %10 = call i16** @__ctype_b_loc() #6
-  %11 = load i16*, i16** %10, align 8
-  %12 = load i8*, i8** %2, align 8
-  %13 = load i8, i8* %12, align 1
-  %14 = sext i8 %13 to i32
-  %15 = sext i32 %14 to i64
-  %16 = getelementptr inbounds i16, i16* %11, i64 %15
-  %17 = load i16, i16* %16, align 2
-  %18 = zext i16 %17 to i32
-  %19 = and i32 %18, 2048
-  %20 = icmp ne i32 %19, 0
-  br i1 %20, label %21, label %29
+9:                                                ; preds = %1
+  store i8 1, i8* %4, align 1
+  %10 = load i8*, i8** %2, align 8
+  %11 = getelementptr inbounds i8, i8* %10, i32 1
+  store i8* %11, i8** %2, align 8
+  br label %12
 
-21:                                               ; preds = %9
-  %22 = load i32, i32* %3, align 4
-  %23 = mul nsw i32 %22, 10
-  %24 = load i8*, i8** %2, align 8
-  %25 = load i8, i8* %24, align 1
-  %26 = sext i8 %25 to i32
-  %27 = sub nsw i32 %26, 48
-  %28 = add nsw i32 %23, %27
-  store i32 %28, i32* %3, align 4
-  br label %30
+12:                                               ; preds = %9, %1
+  br label %13
 
-29:                                               ; preds = %9
-  br label %34
+13:                                               ; preds = %40, %12
+  %14 = load i8*, i8** %2, align 8
+  %15 = load i8, i8* %14, align 1
+  %16 = sext i8 %15 to i32
+  %17 = icmp ne i32 %16, 0
+  br i1 %17, label %18, label %43
 
-30:                                               ; preds = %21
-  br label %31
+18:                                               ; preds = %13
+  %19 = call i16** @__ctype_b_loc() #6
+  %20 = load i16*, i16** %19, align 8
+  %21 = load i8*, i8** %2, align 8
+  %22 = load i8, i8* %21, align 1
+  %23 = sext i8 %22 to i32
+  %24 = sext i32 %23 to i64
+  %25 = getelementptr inbounds i16, i16* %20, i64 %24
+  %26 = load i16, i16* %25, align 2
+  %27 = zext i16 %26 to i32
+  %28 = and i32 %27, 2048
+  %29 = icmp ne i32 %28, 0
+  br i1 %29, label %30, label %38
 
-31:                                               ; preds = %30
-  %32 = load i8*, i8** %2, align 8
-  %33 = getelementptr inbounds i8, i8* %32, i32 1
-  store i8* %33, i8** %2, align 8
-  br label %4
+30:                                               ; preds = %18
+  %31 = load i32, i32* %3, align 4
+  %32 = mul nsw i32 %31, 10
+  %33 = load i8*, i8** %2, align 8
+  %34 = load i8, i8* %33, align 1
+  %35 = sext i8 %34 to i32
+  %36 = sub nsw i32 %35, 48
+  %37 = add nsw i32 %32, %36
+  store i32 %37, i32* %3, align 4
+  br label %39
 
-34:                                               ; preds = %29, %4
-  %35 = load i32, i32* %3, align 4
-  ret i32 %35
+38:                                               ; preds = %18
+  br label %43
+
+39:                                               ; preds = %30
+  br label %40
+
+40:                                               ; preds = %39
+  %41 = load i8*, i8** %2, align 8
+  %42 = getelementptr inbounds i8, i8* %41, i32 1
+  store i8* %42, i8** %2, align 8
+  br label %13
+
+43:                                               ; preds = %38, %13
+  %44 = load i32, i32* %3, align 4
+  %45 = load i8, i8* %4, align 1
+  %46 = trunc i8 %45 to i1
+  %47 = zext i1 %46 to i64
+  %48 = select i1 %46, i32 -1, i32 1
+  %49 = mul nsw i32 %44, %48
+  ret i32 %49
 }
 
 ; Function Attrs: nounwind readnone
