@@ -5,12 +5,12 @@ import AST.binaryExprNode;
 
 public class constant extends Entity {
     public enum constantType{
-        I1, I32, I64, NULL, VOID, STRING
+        I1, I8, I32, I64, NULL, VOID, STRING
     }
 
     public constantType constType;
     public boolean i1;
-    public int i32;
+    public int i8, i32;
     public long i64;
     public String str;
 
@@ -23,6 +23,9 @@ public class constant extends Entity {
                 if (((baseType) type_).i_N == 1) {
                     constType = constant.constantType.I1;
                     i1 = false;
+                } else if (((baseType) type_).i_N == 8){
+                    constType = constant.constantType.I8;
+                    i8 = 0;
                 } else if (((baseType) type_).i_N == 32) {
                     constType = constant.constantType.I32;
                     i32 = 0;
@@ -39,8 +42,11 @@ public class constant extends Entity {
         super(false, type_);
         assert(type_ instanceof baseType);
         int i_N = ((baseType) type_).i_N;
-        assert(i_N == 32 || i_N == 64);
-        if (i_N == 32) {
+        assert(i_N == 8 || i_N == 32 || i_N == 64);
+        if (i_N == 8){
+            constType = constant.constantType.I8;
+            i8 = 0;
+        } else if (i_N == 32) {
             constType = constant.constantType.I32;
             i32 = (int) integer;
         } else {
@@ -145,6 +151,7 @@ public class constant extends Entity {
     public String getValue() {
         return switch (constType) {
             case I1 -> Boolean.toString(i1);
+            case I8 -> Integer.toString(i8);
             case I32 -> Integer.toString(i32);
             case I64 -> Long.toString(i64);
             case NULL -> "null";

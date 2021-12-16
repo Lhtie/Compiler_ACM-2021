@@ -7,6 +7,8 @@ import LLVMIR.Entity.Entity;
 import LLVMIR.Entity.register;
 import LLVMIR.Function;
 import LLVMIR.Module;
+import LLVMIR.Stmt.constStmt;
+import LLVMIR.Stmt.declare;
 import LLVMIR.Type.IRType;
 import LLVMIR.Type.baseType;
 import LLVMIR.Type.ptrType;
@@ -15,6 +17,7 @@ import LLVMIR.Type.arrayType;
 import Util.Scope;
 import Util.Type;
 import Util.globalScope;
+import Util.position;
 
 import java.util.ArrayList;
 
@@ -34,8 +37,30 @@ public class IRCollector implements ASTVisitor {
         currentScope = scope;
     }
 
+    private void loadBuiltIn(){
+        gScope.addFunc("print", topModule.print);
+        gScope.addFunc("println", topModule.println);
+        gScope.addFunc("printInt", topModule.printInt);
+        gScope.addFunc("printlnInt", topModule.printlnInt);
+        gScope.addFunc("getString", topModule.getString);
+        gScope.addFunc("getInt", topModule.getInt);
+        gScope.addFunc("toString", topModule.toString);
+
+        globalScope s = new globalScope(gScope, "class.__array");
+        gScope.addClass(null, s.identifier, s);
+        s.addFunc("size", topModule.array_size);
+        s = new globalScope(gScope, "class.string");
+        gScope.addClass(null, s.identifier, s);
+        s.addFunc("length", topModule.string_length);
+        s.addFunc("subString", topModule.string_subString);
+        s.addFunc("parseInt", topModule.string_parseInt);
+        s.addFunc("ord", topModule.string_ord);
+    }
+
     @Override
     public void visit(RootNode it) {
+        loadBuiltIn();
+
         it.define.forEach(x -> {
             if (x instanceof classDefNode) {
                 Class cl = new Class("class." + ((classDefNode) x).name);
