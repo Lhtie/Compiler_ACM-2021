@@ -141,7 +141,7 @@ public class IRBuilder implements ASTVisitor {
                     if (retEntity.islValue)
                         retEntity = loadPtrType(retEntity);
                     if (isNull(retEntity))
-                        retEntity.type = res.type;
+                        retEntity.type = ((ptrType) res.type).type;
                     currentBlock.stmts.add(new store(retEntity, res));
                     currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
                     topModule.fns.add(fn);
@@ -155,7 +155,7 @@ public class IRBuilder implements ASTVisitor {
                     if (retEntity.islValue)
                         retEntity = loadPtrType(retEntity);
                     if (isNull(retEntity))
-                        retEntity.type = res.type;
+                        retEntity.type = ((ptrType) res.type).type;
                     currentBlock.stmts.add(new store(retEntity, res));
                 }
             }
@@ -434,12 +434,15 @@ public class IRBuilder implements ASTVisitor {
         if (retFuncInCl)
             parameters.add(retEntity);
         Function fn = retFunc;
-        it.argList.expr.forEach(x -> {
+        for (int i = 0; i < it.argList.expr.size(); ++i){
+            ExprNode x = it.argList.expr.get(i);
             x.accept(this);
             if (retEntity.islValue)
                 retEntity = loadPtrType(retEntity);
+            if (isNull(retEntity))
+                retEntity.type = fn.parameters.get(i).type;
             parameters.add(retEntity);
-        });
+        }
         if (fn.retType instanceof baseType base && base.typeName == baseType.typeToken.VOID)
             retEntity = null;
         else retEntity = new register(false, fn.retType, currentFn.getRegId());

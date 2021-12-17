@@ -5,7 +5,7 @@ import AST.binaryExprNode;
 
 public class constant extends Entity {
     public enum constantType{
-        I1, I8, I32, I64, NULL, VOID, STRING
+        I1, I8, I32, I64, NULL, VOID, STRING, UNDEF
     }
 
     public constantType constType;
@@ -67,6 +67,11 @@ public class constant extends Entity {
         assert(type_ instanceof arrayType);
         constType = constantType.STRING;
         str = str_;
+    }
+
+    public constant(IRType type_, constantType constType_){
+        super(false, type_);
+        constType = constType_;
     }
 
     public boolean isInteger(){
@@ -135,9 +140,13 @@ public class constant extends Entity {
                 return new constant(type, constType == constantType.I32 ? i32 - ot.i32 : i64 - ot.i64);
             else if (it.binaryOp == binaryExprNode.binaryOpType.STAR)
                 return new constant(type, constType == constantType.I32 ? i32 * ot.i32 : i64 * ot.i64);
-            else if (it.binaryOp == binaryExprNode.binaryOpType.DIV)
-                return new constant(type, constType == constantType.I32 ? i32 / ot.i32 : i64 / ot.i64);
-            else if (it.binaryOp == binaryExprNode.binaryOpType.MOD)
+            else if (it.binaryOp == binaryExprNode.binaryOpType.DIV) {
+                if (constType == constantType.I32)
+                    if (ot.i32 == 0) return new constant(type, constantType.UNDEF);
+                    else return new constant(type, i32 / ot.i32);
+                else if (ot.i64 == 0) return new constant(type, constantType.UNDEF);
+                    else return new constant(type, i64 / ot.i64);
+            } else if (it.binaryOp == binaryExprNode.binaryOpType.MOD)
                 return new constant(type, constType == constantType.I32 ? i32 % ot.i32 : i64 % ot.i64);
             else if (it.binaryOp == binaryExprNode.binaryOpType.LEFT_SHIFT)
                 return new constant(type, constType == constantType.I32 ? i32 << ot.i32 : i64 << ot.i64);
@@ -162,6 +171,7 @@ public class constant extends Entity {
             case NULL -> "null";
             case VOID -> null;
             case STRING -> "c\"" + str + "\\00\"";
+            case UNDEF -> "undef";
         };
     }
 
