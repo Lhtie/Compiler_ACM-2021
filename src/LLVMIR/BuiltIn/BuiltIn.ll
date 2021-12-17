@@ -7,6 +7,7 @@ target triple = "x86_64-pc-linux-gnu"
 @.str.1 = private unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
 @.str.2 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
 @.str.3 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.4 = private unnamed_addr constant [4 x i8] c" %c\00", align 1
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local void @print(i8* %0) #0 {
@@ -57,68 +58,68 @@ define dso_local i8* @getString() #0 {
   %6 = load i8*, i8** %1, align 8
   store i8 0, i8* %6, align 1
   store i32 1, i32* %2, align 4
-  %7 = call i32 @getchar()
-  %8 = trunc i32 %7 to i8
-  store i8 %8, i8* %3, align 1
-  br label %9
+  %7 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.4, i64 0, i64 0), i8* %3)
+  br label %8
 
-9:                                                ; preds = %13, %0
-  %10 = load i8, i8* %3, align 1
-  %11 = sext i8 %10 to i32
-  %12 = icmp ne i32 %11, 10
-  br i1 %12, label %13, label %39
+8:                                                ; preds = %12, %0
+  %9 = load i8, i8* %3, align 1
+  %10 = sext i8 %9 to i32
+  %11 = icmp ne i32 %10, 10
+  br i1 %11, label %12, label %38
 
-13:                                               ; preds = %9
-  %14 = load i32, i32* %2, align 4
-  %15 = add nsw i32 %14, 1
-  store i32 %15, i32* %2, align 4
-  %16 = sext i32 %15 to i64
-  %17 = mul i64 1, %16
-  %18 = call noalias i8* @malloc(i64 %17) #5
-  store i8* %18, i8** %4, align 8
-  %19 = load i8*, i8** %4, align 8
-  %20 = getelementptr inbounds i8, i8* %19, i64 0
-  store i8 0, i8* %20, align 1
-  %21 = load i8*, i8** %4, align 8
-  %22 = load i8*, i8** %1, align 8
-  %23 = call i8* @strcpy(i8* %21, i8* %22) #5
-  %24 = load i8, i8* %3, align 1
-  %25 = load i8*, i8** %4, align 8
-  %26 = load i32, i32* %2, align 4
-  %27 = sub nsw i32 %26, 2
-  %28 = sext i32 %27 to i64
-  %29 = getelementptr inbounds i8, i8* %25, i64 %28
-  store i8 %24, i8* %29, align 1
-  %30 = load i8*, i8** %4, align 8
-  %31 = load i32, i32* %2, align 4
-  %32 = sub nsw i32 %31, 1
-  %33 = sext i32 %32 to i64
-  %34 = getelementptr inbounds i8, i8* %30, i64 %33
-  store i8 0, i8* %34, align 1
-  %35 = load i8*, i8** %1, align 8
-  call void @free(i8* %35) #5
-  %36 = load i8*, i8** %4, align 8
-  store i8* %36, i8** %1, align 8
-  %37 = call i32 @getchar()
-  %38 = trunc i32 %37 to i8
-  store i8 %38, i8* %3, align 1
-  br label %9
+12:                                               ; preds = %8
+  %13 = load i32, i32* %2, align 4
+  %14 = add nsw i32 %13, 1
+  store i32 %14, i32* %2, align 4
+  %15 = sext i32 %14 to i64
+  %16 = mul i64 1, %15
+  %17 = call noalias i8* @malloc(i64 %16) #5
+  store i8* %17, i8** %4, align 8
+  %18 = load i8*, i8** %4, align 8
+  %19 = getelementptr inbounds i8, i8* %18, i64 0
+  store i8 0, i8* %19, align 1
+  %20 = load i8*, i8** %4, align 8
+  %21 = load i8*, i8** %1, align 8
+  %22 = call i8* @strcpy(i8* %20, i8* %21) #5
+  %23 = load i8, i8* %3, align 1
+  %24 = load i8*, i8** %4, align 8
+  %25 = load i32, i32* %2, align 4
+  %26 = sub nsw i32 %25, 2
+  %27 = sext i32 %26 to i64
+  %28 = getelementptr inbounds i8, i8* %24, i64 %27
+  store i8 %23, i8* %28, align 1
+  %29 = load i8*, i8** %4, align 8
+  %30 = load i32, i32* %2, align 4
+  %31 = sub nsw i32 %30, 1
+  %32 = sext i32 %31 to i64
+  %33 = getelementptr inbounds i8, i8* %29, i64 %32
+  store i8 0, i8* %33, align 1
+  %34 = load i8*, i8** %1, align 8
+  call void @free(i8* %34) #5
+  %35 = load i8*, i8** %4, align 8
+  store i8* %35, i8** %1, align 8
+  %36 = call i32 @getchar()
+  %37 = trunc i32 %36 to i8
+  store i8 %37, i8* %3, align 1
+  br label %8
 
-39:                                               ; preds = %9
-  %40 = load i8*, i8** %1, align 8
-  ret i8* %40
+38:                                               ; preds = %8
+  %39 = load i8*, i8** %1, align 8
+  ret i8* %39
 }
 
 ; Function Attrs: nounwind
 declare dso_local noalias i8* @malloc(i64) #2
 
-declare dso_local i32 @getchar() #1
+declare dso_local i32 @__isoc99_scanf(i8*, ...) #1
 
 ; Function Attrs: nounwind
 declare dso_local i8* @strcpy(i8*, i8*) #2
 
 ; Function Attrs: nounwind
 declare dso_local void @free(i8*) #2
+
+declare dso_local i32 @getchar() #1
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i32 @getInt() #0 {
@@ -127,8 +128,6 @@ define dso_local i32 @getInt() #0 {
   %3 = load i32, i32* %1, align 4
   ret i32 %3
 }
-
-declare dso_local i32 @__isoc99_scanf(i8*, ...) #1
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i8* @toString(i32 %0) #0 {

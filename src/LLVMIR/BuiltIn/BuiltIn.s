@@ -118,8 +118,10 @@ getString:                              # @getString
 	movq	-24(%rbp), %rax
 	movb	$0, (%rax)
 	movl	$1, -8(%rbp)
-	callq	getchar
-	movb	%al, -1(%rbp)
+	movabsq	$.L.str.4, %rdi
+	leaq	-1(%rbp), %rsi
+	movb	$0, %al
+	callq	__isoc99_scanf
 .LBB4_1:                                # =>This Inner Loop Header: Depth=1
 	movsbl	-1(%rbp), %eax
 	cmpl	$10, %eax
@@ -751,6 +753,11 @@ string_ge:                              # @string_ge
 .L.str.3:
 	.asciz	"%d\n"
 	.size	.L.str.3, 4
+
+	.type	.L.str.4,@object        # @.str.4
+.L.str.4:
+	.asciz	" %c"
+	.size	.L.str.4, 4
 
 	.ident	"clang version 10.0.0-4ubuntu1 "
 	.section	".note.GNU-stack","",@progbits

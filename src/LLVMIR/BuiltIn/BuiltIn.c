@@ -24,7 +24,8 @@ char *getString(){
     char *ret = (char *) malloc(sizeof(char));
     *ret = '\0';
     int len = 1;
-    char ch = getchar();
+    char ch;
+    scanf(" %c", &ch);
     while (ch != '\n') {
         char *tmp = (char *) malloc(sizeof(char) * (++len));
         tmp[0] = '\0';

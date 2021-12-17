@@ -52,7 +52,7 @@ public class IRCollector implements ASTVisitor {
         s = new globalScope(gScope, "class.string");
         gScope.addClass(null, s.identifier, s);
         s.addFunc("length", topModule.string_length);
-        s.addFunc("subString", topModule.string_subString);
+        s.addFunc("substring", topModule.string_subString);
         s.addFunc("parseInt", topModule.string_parseInt);
         s.addFunc("ord", topModule.string_ord);
     }
