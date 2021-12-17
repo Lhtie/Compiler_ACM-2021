@@ -54,6 +54,10 @@ public class IRBuilder implements ASTVisitor {
         return x.type instanceof ptrType p && p.type instanceof baseType q && q.i_N == 8;
     }
 
+    private boolean isNull(Entity x){
+        return x instanceof constant c && c.constType == constant.constantType.NULL;
+    }
+
     @Override
     public void visit(RootNode it) {
         topModule.gVars.add(new constStmt("@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @__cxx_global_var_init, i8* null }]"));
@@ -136,6 +140,8 @@ public class IRBuilder implements ASTVisitor {
                     x.expr.accept(this);
                     if (retEntity.islValue)
                         retEntity = loadPtrType(retEntity);
+                    if (isNull(retEntity))
+                        retEntity.type = res.type;
                     currentBlock.stmts.add(new store(retEntity, res));
                     currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
                     topModule.fns.add(fn);
@@ -148,6 +154,8 @@ public class IRBuilder implements ASTVisitor {
                     x.expr.accept(this);
                     if (retEntity.islValue)
                         retEntity = loadPtrType(retEntity);
+                    if (isNull(retEntity))
+                        retEntity.type = res.type;
                     currentBlock.stmts.add(new store(retEntity, res));
                 }
             }
@@ -374,6 +382,8 @@ public class IRBuilder implements ASTVisitor {
             it.expr.accept(this);
             if (retEntity.islValue)
                 retEntity = loadPtrType(retEntity);
+            if (isNull(retEntity))
+                retEntity.type = currentFn.retType;
             currentBlock.stmts.add(new ret(retEntity));
         } else
             currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
@@ -515,7 +525,7 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = loadPtrType(retEntity);
             Entity res = retEntity;
             it.lhs.accept(this);
-            if (res instanceof constant)
+            if (isNull(res))
                 res.type = ((ptrType) retEntity.type).type;
             currentBlock.stmts.add(new store(res, retEntity));
         } else if (it.isCmpOp() || it.isArithOp()){
@@ -548,6 +558,8 @@ public class IRBuilder implements ASTVisitor {
             if (l instanceof constant && r instanceof constant){
                 retEntity = ((constant) l).binaryOp(it, r);
             } else {
+                if (isNull(l)) l.type = r.type;
+                else if (isNull(r)) r.type = l.type;
                 IRType type = it.isCmpOp() ? new baseType(baseType.typeToken.I, 1) : l.type;
                 retEntity = new register(false, type, currentFn.getRegId());
                 if (it.isCmpOp())

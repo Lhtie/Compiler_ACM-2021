@@ -95,32 +95,37 @@ public class constant extends Entity {
         assert(other instanceof constant);
         constant ot = (constant) other;
         if (it.isCmpOp()){
+            IRType i1Type = new baseType(baseType.typeToken.I, 1);
             if (it.binaryOp == binaryExprNode.binaryOpType.EQUALS){
                 if (isBoolean()){
                     assert(ot.isBoolean());
-                    return new constant(type, i1 == ot.i1);
+                    return new constant(i1Type, i1 == ot.i1);
+                } else if (isInteger()){
+                    assert(ot.isInteger());
+                    return new constant(i1Type, constType == constantType.I32 ? i32 == ot.i32 : i64 == ot.i64);
                 } else {
-                    assert(isInteger() && ot.isInteger());
-                    return new constant(type, constType == constantType.I32 ? i32 == ot.i32 : i64 == ot.i64);
+                    return new constant(i1Type, constType == ot.constType);
                 }
             } else if (it.binaryOp == binaryExprNode.binaryOpType.NOT_EQ){
                 if (isBoolean()){
                     assert(ot.isBoolean());
-                    return new constant(type, i1 != ot.i1);
+                    return new constant(i1Type, i1 != ot.i1);
+                } else if (isInteger()){
+                    assert(ot.isInteger());
+                    return new constant(i1Type, constType == constantType.I32 ? i32 != ot.i32 : i64 != ot.i64);
                 } else {
-                    assert(isInteger() && ot.isInteger());
-                    return new constant(type, constType == constantType.I32 ? i32 != ot.i32 : i64 != ot.i64);
+                    return new constant(i1Type, constType != ot.constType);
                 }
             } else {
                 assert(isInteger() && ot.isInteger());
                 if (it.binaryOp == binaryExprNode.binaryOpType.LESS_THAN)
-                    return new constant(type, constType == constantType.I32 ? i32 < ot.i32 : i64 < ot.i64);
+                    return new constant(i1Type, constType == constantType.I32 ? i32 < ot.i32 : i64 < ot.i64);
                 else if (it.binaryOp == binaryExprNode.binaryOpType.GREATER_THAN)
-                    return new constant(type, constType == constantType.I32 ? i32 > ot.i32 : i64 > ot.i64);
+                    return new constant(i1Type, constType == constantType.I32 ? i32 > ot.i32 : i64 > ot.i64);
                 else if (it.binaryOp == binaryExprNode.binaryOpType.LT_EQ)
-                    return new constant(type, constType == constantType.I32 ? i32 <= ot.i32 : i64 <= ot.i64);
+                    return new constant(i1Type, constType == constantType.I32 ? i32 <= ot.i32 : i64 <= ot.i64);
                 else // it.binaryOp == binaryExprNode.binaryOpType.GT_EQ)
-                    return new constant(type, constType == constantType.I32 ? i32 >= ot.i32 : i64 >= ot.i64);
+                    return new constant(i1Type, constType == constantType.I32 ? i32 >= ot.i32 : i64 >= ot.i64);
             }
         } else {
             assert (it.isArithOp() && isInteger() && ot.isInteger());
