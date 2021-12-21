@@ -191,19 +191,24 @@ public class IRBuilder implements ASTVisitor {
 
         currentScope = gScope.getScopeFromFunc(it.pos, it.name);
         it.parameterList.accept(this);
-        currentFn.retEntity = new register(true, new ptrType(currentFn.retType), currentFn.getRegId());
-        currentBlock.stmts.add(new alloca(currentFn.retEntity, currentFn.retType));
+        if (!it.funcType.isVoid) {
+            currentFn.retEntity = new register(true, new ptrType(currentFn.retType), currentFn.getRegId());
+            currentBlock.stmts.add(new alloca(currentFn.retEntity, currentFn.retType));
+        }
         it.suite.accept(this);
         currentScope = currentScope.getParentScope();
 
         if (!currentBlock.branched){
             Entity ret = new constant(currentFn.retType);
-            currentBlock.stmts.add(new store(ret, currentFn.retEntity));
+            if (!it.funcType.isVoid)
+                currentBlock.stmts.add(new store(ret, currentFn.retEntity));
             currentFn.retBlocks.add(currentBlock);
         }
         currentFn.blocks.add(currentBlock = new BasicBlock(currentFn.getRegId()));
         currentFn.retBlocks.forEach(x -> {x.stmts.add(new br(currentBlock.label));});
-        currentBlock.stmts.add(new ret(loadPtrType(currentFn.retEntity)));
+        if (it.funcType.isVoid)
+            currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
+        else currentBlock.stmts.add(new ret(loadPtrType(currentFn.retEntity)));
     }
 
     @Override
@@ -390,9 +395,8 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = loadPtrType(retEntity);
             if (isNull(retEntity))
                 retEntity.type = currentFn.retType;
-        } else
-            retEntity = new constant(new baseType(baseType.typeToken.VOID));
-        currentBlock.stmts.add(new store(retEntity, currentFn.retEntity));
+            currentBlock.stmts.add(new store(retEntity, currentFn.retEntity));
+        }
         currentFn.retBlocks.add(currentBlock);
         currentBlock.branched = true;
         currentBlock.flowStatus = BasicBlock.flowStatusType.RETURN;
