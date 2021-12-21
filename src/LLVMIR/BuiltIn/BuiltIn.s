@@ -1,734 +1,802 @@
 	.text
 	.file	"BuiltIn.c"
 	.globl	print                   # -- Begin function print
-	.p2align	4, 0x90
+	.p2align	2
 	.type	print,@function
 print:                                  # @print
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
+	addi	sp, sp, -16
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -8(%rbp)
-	movq	-8(%rbp), %rsi
-	movabsq	$.L.str, %rdi
-	movb	$0, %al
-	callq	printf
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	sw	ra, 12(sp)
+	sw	s0, 8(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 16
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	lw	a1, -16(s0)
+	lui	a0, %hi(.L.str)
+	addi	a0, a0, %lo(.L.str)
+	call	printf
+	lw	s0, 8(sp)
+	lw	ra, 12(sp)
+	addi	sp, sp, 16
+	ret
 .Lfunc_end0:
 	.size	print, .Lfunc_end0-print
 	.cfi_endproc
                                         # -- End function
 	.globl	println                 # -- Begin function println
-	.p2align	4, 0x90
+	.p2align	2
 	.type	println,@function
 println:                                # @println
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
+	addi	sp, sp, -16
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -8(%rbp)
-	movq	-8(%rbp), %rsi
-	movabsq	$.L.str.1, %rdi
-	movb	$0, %al
-	callq	printf
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	sw	ra, 12(sp)
+	sw	s0, 8(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 16
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	lw	a1, -16(s0)
+	lui	a0, %hi(.L.str.1)
+	addi	a0, a0, %lo(.L.str.1)
+	call	printf
+	lw	s0, 8(sp)
+	lw	ra, 12(sp)
+	addi	sp, sp, 16
+	ret
 .Lfunc_end1:
 	.size	println, .Lfunc_end1-println
 	.cfi_endproc
                                         # -- End function
 	.globl	printInt                # -- Begin function printInt
-	.p2align	4, 0x90
+	.p2align	2
 	.type	printInt,@function
 printInt:                               # @printInt
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
+	addi	sp, sp, -16
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movl	%edi, -4(%rbp)
-	movl	-4(%rbp), %esi
-	movabsq	$.L.str.2, %rdi
-	movb	$0, %al
-	callq	printf
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	sw	ra, 12(sp)
+	sw	s0, 8(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 16
+	.cfi_def_cfa s0, 0
+	sw	a0, -12(s0)
+	lw	a1, -12(s0)
+	lui	a0, %hi(.L.str.2)
+	addi	a0, a0, %lo(.L.str.2)
+	call	printf
+	lw	s0, 8(sp)
+	lw	ra, 12(sp)
+	addi	sp, sp, 16
+	ret
 .Lfunc_end2:
 	.size	printInt, .Lfunc_end2-printInt
 	.cfi_endproc
                                         # -- End function
 	.globl	printlnInt              # -- Begin function printlnInt
-	.p2align	4, 0x90
+	.p2align	2
 	.type	printlnInt,@function
 printlnInt:                             # @printlnInt
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
+	addi	sp, sp, -16
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movl	%edi, -4(%rbp)
-	movl	-4(%rbp), %esi
-	movabsq	$.L.str.3, %rdi
-	movb	$0, %al
-	callq	printf
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	sw	ra, 12(sp)
+	sw	s0, 8(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 16
+	.cfi_def_cfa s0, 0
+	sw	a0, -12(s0)
+	lw	a1, -12(s0)
+	lui	a0, %hi(.L.str.3)
+	addi	a0, a0, %lo(.L.str.3)
+	call	printf
+	lw	s0, 8(sp)
+	lw	ra, 12(sp)
+	addi	sp, sp, 16
+	ret
 .Lfunc_end3:
 	.size	printlnInt, .Lfunc_end3-printlnInt
 	.cfi_endproc
                                         # -- End function
 	.globl	getString               # -- Begin function getString
-	.p2align	4, 0x90
+	.p2align	2
 	.type	getString,@function
 getString:                              # @getString
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$32, %rsp
-	movl	$1, %edi
-	callq	malloc
-	movq	%rax, -24(%rbp)
-	movq	-24(%rbp), %rax
-	movb	$0, (%rax)
-	movl	$1, -8(%rbp)
-	movabsq	$.L.str.4, %rdi
-	leaq	-1(%rbp), %rsi
-	movb	$0, %al
-	callq	__isoc99_scanf
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	sw	s1, 20(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	.cfi_offset s1, -12
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	addi	s1, zero, 1
+	addi	a0, zero, 1
+	mv	a1, zero
+	call	malloc
+	sw	a0, -16(s0)
+	lw	a0, -16(s0)
+	sb	zero, 0(a0)
+	sw	s1, -20(s0)
+	lui	a0, %hi(.L.str.4)
+	addi	a0, a0, %lo(.L.str.4)
+	addi	a1, s0, -21
+	call	__isoc99_scanf
+	j	.LBB4_1
 .LBB4_1:                                # =>This Inner Loop Header: Depth=1
-	movsbl	-1(%rbp), %eax
-	cmpl	$10, %eax
-	je	.LBB4_3
-# %bb.2:                                #   in Loop: Header=BB4_1 Depth=1
-	movl	-8(%rbp), %eax
-	addl	$1, %eax
-	movl	%eax, -8(%rbp)
-	movslq	%eax, %rdi
-	shlq	$0, %rdi
-	callq	malloc
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rax
-	movb	$0, (%rax)
-	movq	-16(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	callq	strcpy
-	movb	-1(%rbp), %al
-	movq	-16(%rbp), %rcx
-	movl	-8(%rbp), %edx
-	subl	$2, %edx
-	movslq	%edx, %rdx
-	movb	%al, (%rcx,%rdx)
-	movq	-16(%rbp), %rax
-	movl	-8(%rbp), %ecx
-	subl	$1, %ecx
-	movslq	%ecx, %rcx
-	movb	$0, (%rax,%rcx)
-	movq	-24(%rbp), %rdi
-	callq	free
-	movq	-16(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	callq	getchar
-	movb	%al, -1(%rbp)
-	jmp	.LBB4_1
+	lb	a0, -21(s0)
+	addi	a1, zero, 10
+	beq	a0, a1, .LBB4_3
+	j	.LBB4_2
+.LBB4_2:                                #   in Loop: Header=BB4_1 Depth=1
+	lw	a0, -20(s0)
+	addi	a0, a0, 1
+	sw	a0, -20(s0)
+	srai	a1, a0, 31
+	call	malloc
+	sw	a0, -32(s0)
+	lw	a0, -32(s0)
+	sb	zero, 0(a0)
+	lw	a0, -32(s0)
+	lw	a1, -16(s0)
+	call	strcpy
+	lb	a0, -21(s0)
+	lw	a1, -32(s0)
+	lw	a2, -20(s0)
+	add	a1, a2, a1
+	sb	a0, -2(a1)
+	lw	a0, -32(s0)
+	lw	a1, -20(s0)
+	add	a0, a1, a0
+	sb	zero, -1(a0)
+	lw	a0, -16(s0)
+	call	free
+	lw	a0, -32(s0)
+	sw	a0, -16(s0)
+	call	getchar
+	sb	a0, -21(s0)
+	j	.LBB4_1
 .LBB4_3:
-	movq	-24(%rbp), %rax
-	addq	$32, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	lw	a0, -16(s0)
+	lw	s1, 20(sp)
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end4:
 	.size	getString, .Lfunc_end4-getString
 	.cfi_endproc
                                         # -- End function
 	.globl	getInt                  # -- Begin function getInt
-	.p2align	4, 0x90
+	.p2align	2
 	.type	getInt,@function
 getInt:                                 # @getInt
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
+	addi	sp, sp, -16
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movabsq	$.L.str.2, %rdi
-	leaq	-4(%rbp), %rsi
-	movb	$0, %al
-	callq	__isoc99_scanf
-	movl	-4(%rbp), %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	sw	ra, 12(sp)
+	sw	s0, 8(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 16
+	.cfi_def_cfa s0, 0
+	lui	a0, %hi(.L.str.2)
+	addi	a0, a0, %lo(.L.str.2)
+	addi	a1, s0, -12
+	call	__isoc99_scanf
+	lw	a0, -12(s0)
+	lw	s0, 8(sp)
+	lw	ra, 12(sp)
+	addi	sp, sp, 16
+	ret
 .Lfunc_end5:
 	.size	getInt, .Lfunc_end5-getInt
 	.cfi_endproc
                                         # -- End function
 	.globl	toString                # -- Begin function toString
-	.p2align	4, 0x90
+	.p2align	2
 	.type	toString,@function
 toString:                               # @toString
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$48, %rsp
-	movl	%edi, -4(%rbp)
-	movl	$0, -20(%rbp)
-	cmpl	$0, -4(%rbp)
-	jge	.LBB6_2
-# %bb.1:
-	xorl	%eax, %eax
-	movl	$1, -20(%rbp)
-	subl	-4(%rbp), %eax
-	movl	%eax, -4(%rbp)
+	addi	sp, sp, -48
+	.cfi_def_cfa_offset 48
+	sw	ra, 44(sp)
+	sw	s0, 40(sp)
+	sw	s1, 36(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	.cfi_offset s1, -12
+	addi	s0, sp, 48
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	zero, -20(s0)
+	lw	a0, -16(s0)
+	addi	a1, zero, -1
+	blt	a1, a0, .LBB6_2
+	j	.LBB6_1
+.LBB6_1:
+	addi	a0, zero, 1
+	sw	a0, -20(s0)
+	lw	a0, -16(s0)
+	neg	a0, a0
+	sw	a0, -16(s0)
+	j	.LBB6_2
 .LBB6_2:
-	movl	$1, %edi
-	callq	malloc
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rax
-	movb	$0, (%rax)
-	movl	$1, -8(%rbp)
+	addi	s1, zero, 1
+	addi	a0, zero, 1
+	mv	a1, zero
+	call	malloc
+	sw	a0, -24(s0)
+	lw	a0, -24(s0)
+	sb	zero, 0(a0)
+	sw	s1, -28(s0)
+	j	.LBB6_3
 .LBB6_3:                                # =>This Inner Loop Header: Depth=1
-	movl	-8(%rbp), %eax
-	addl	$1, %eax
-	movl	%eax, -8(%rbp)
-	movslq	%eax, %rdi
-	shlq	$0, %rdi
-	callq	malloc
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	movb	$0, 1(%rax)
-	movq	-40(%rbp), %rdi
-	addq	$1, %rdi
-	movq	-16(%rbp), %rsi
-	callq	strcpy
-	movl	-4(%rbp), %eax
-	cltd
-	movl	$10, %ecx
-	idivl	%ecx
-	addl	$48, %edx
-	movq	-40(%rbp), %rax
-	movb	%dl, (%rax)
-	movq	-16(%rbp), %rdi
-	callq	free
-	movq	-40(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movl	-4(%rbp), %eax
-	cltd
-	movl	$10, %ecx
-	idivl	%ecx
-	movl	%eax, -4(%rbp)
-# %bb.4:                                #   in Loop: Header=BB6_3 Depth=1
-	cmpl	$0, -4(%rbp)
-	jne	.LBB6_3
-# %bb.5:
-	cmpl	$0, -20(%rbp)
-	je	.LBB6_7
-# %bb.6:
-	movl	-8(%rbp), %eax
-	addl	$1, %eax
-	movl	%eax, -8(%rbp)
-	movslq	%eax, %rdi
-	shlq	$0, %rdi
-	callq	malloc
-	movq	%rax, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movb	$0, 1(%rax)
-	movq	-32(%rbp), %rdi
-	addq	$1, %rdi
-	movq	-16(%rbp), %rsi
-	callq	strcpy
-	movq	-32(%rbp), %rax
-	movb	$45, (%rax)
-	movq	-16(%rbp), %rdi
-	callq	free
-	movq	-32(%rbp), %rax
-	movq	%rax, -16(%rbp)
+	lw	a0, -28(s0)
+	addi	a0, a0, 1
+	sw	a0, -28(s0)
+	srai	a1, a0, 31
+	call	malloc
+	sw	a0, -32(s0)
+	lw	a0, -32(s0)
+	sb	zero, 1(a0)
+	lw	a0, -32(s0)
+	addi	a0, a0, 1
+	lw	a1, -24(s0)
+	call	strcpy
+	lw	a0, -16(s0)
+	addi	a1, zero, 10
+	call	__modsi3
+	addi	a0, a0, 48
+	lw	a1, -32(s0)
+	sb	a0, 0(a1)
+	lw	a0, -24(s0)
+	call	free
+	lw	a0, -32(s0)
+	sw	a0, -24(s0)
+	lw	a0, -16(s0)
+	addi	a1, zero, 10
+	call	__divsi3
+	sw	a0, -16(s0)
+	j	.LBB6_4
+.LBB6_4:                                #   in Loop: Header=BB6_3 Depth=1
+	lw	a0, -16(s0)
+	bnez	a0, .LBB6_3
+	j	.LBB6_5
+.LBB6_5:
+	lw	a0, -20(s0)
+	beqz	a0, .LBB6_7
+	j	.LBB6_6
+.LBB6_6:
+	lw	a0, -28(s0)
+	addi	a0, a0, 1
+	sw	a0, -28(s0)
+	srai	a1, a0, 31
+	call	malloc
+	sw	a0, -40(s0)
+	lw	a0, -40(s0)
+	sb	zero, 1(a0)
+	lw	a0, -40(s0)
+	addi	a0, a0, 1
+	lw	a1, -24(s0)
+	call	strcpy
+	lw	a0, -40(s0)
+	addi	a1, zero, 45
+	sb	a1, 0(a0)
+	lw	a0, -24(s0)
+	call	free
+	lw	a0, -40(s0)
+	sw	a0, -24(s0)
+	j	.LBB6_7
 .LBB6_7:
-	movq	-16(%rbp), %rax
-	addq	$48, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	lw	a0, -24(s0)
+	lw	s1, 36(sp)
+	lw	s0, 40(sp)
+	lw	ra, 44(sp)
+	addi	sp, sp, 48
+	ret
 .Lfunc_end6:
 	.size	toString, .Lfunc_end6-toString
 	.cfi_endproc
                                         # -- End function
 	.globl	array_size              # -- Begin function array_size
-	.p2align	4, 0x90
+	.p2align	2
 	.type	array_size,@function
 array_size:                             # @array_size
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
+	addi	sp, sp, -16
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	movq	%rdi, -8(%rbp)
-	movq	-8(%rbp), %rax
-	movl	-4(%rax), %eax
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	sw	ra, 12(sp)
+	sw	s0, 8(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 16
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	lw	a0, -16(s0)
+	lw	a0, -4(a0)
+	lw	s0, 8(sp)
+	lw	ra, 12(sp)
+	addi	sp, sp, 16
+	ret
 .Lfunc_end7:
 	.size	array_size, .Lfunc_end7-array_size
 	.cfi_endproc
                                         # -- End function
 	.globl	string_length           # -- Begin function string_length
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_length,@function
 string_length:                          # @string_length
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	movq	%rdi, -16(%rbp)
-	movl	$0, -4(%rbp)
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	zero, -20(s0)
+	j	.LBB8_1
 .LBB8_1:                                # =>This Inner Loop Header: Depth=1
-	movq	-16(%rbp), %rax
-	movsbl	(%rax), %eax
-	cmpl	$0, %eax
-	je	.LBB8_4
-# %bb.2:                                #   in Loop: Header=BB8_1 Depth=1
-	movl	-4(%rbp), %eax
-	addl	$1, %eax
-	movl	%eax, -4(%rbp)
-# %bb.3:                                #   in Loop: Header=BB8_1 Depth=1
-	movq	-16(%rbp), %rax
-	addq	$1, %rax
-	movq	%rax, -16(%rbp)
-	jmp	.LBB8_1
+	lw	a0, -16(s0)
+	lb	a0, 0(a0)
+	beqz	a0, .LBB8_4
+	j	.LBB8_2
+.LBB8_2:                                #   in Loop: Header=BB8_1 Depth=1
+	lw	a0, -20(s0)
+	addi	a0, a0, 1
+	sw	a0, -20(s0)
+	j	.LBB8_3
+.LBB8_3:                                #   in Loop: Header=BB8_1 Depth=1
+	lw	a0, -16(s0)
+	addi	a0, a0, 1
+	sw	a0, -16(s0)
+	j	.LBB8_1
 .LBB8_4:
-	movl	-4(%rbp), %eax
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	lw	a0, -20(s0)
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end8:
 	.size	string_length, .Lfunc_end8-string_length
 	.cfi_endproc
                                         # -- End function
 	.globl	string_subString        # -- Begin function string_subString
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_subString,@function
 string_subString:                       # @string_subString
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$48, %rsp
-	movq	%rdi, -40(%rbp)
-	movl	%esi, -32(%rbp)
-	movl	%edx, -28(%rbp)
-	movl	$1, %edi
-	callq	malloc
-	movq	%rax, -24(%rbp)
-	movq	-24(%rbp), %rax
-	movb	$0, (%rax)
-	movl	-32(%rbp), %eax
-	movl	%eax, -8(%rbp)
-	movl	$1, -4(%rbp)
+	addi	sp, sp, -48
+	.cfi_def_cfa_offset 48
+	sw	ra, 44(sp)
+	sw	s0, 40(sp)
+	sw	s1, 36(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	.cfi_offset s1, -12
+	addi	s0, sp, 48
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -20(s0)
+	sw	a2, -24(s0)
+	addi	s1, zero, 1
+	addi	a0, zero, 1
+	mv	a1, zero
+	call	malloc
+	sw	a0, -32(s0)
+	lw	a0, -32(s0)
+	sb	zero, 0(a0)
+	lw	a0, -20(s0)
+	sw	a0, -36(s0)
+	sw	s1, -40(s0)
+	j	.LBB9_1
 .LBB9_1:                                # =>This Inner Loop Header: Depth=1
-	movl	-8(%rbp), %eax
-	cmpl	-28(%rbp), %eax
-	jge	.LBB9_4
-# %bb.2:                                #   in Loop: Header=BB9_1 Depth=1
-	movl	-4(%rbp), %eax
-	addl	$1, %eax
-	movl	%eax, -4(%rbp)
-	movslq	%eax, %rdi
-	shlq	$0, %rdi
-	callq	malloc
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rax
-	movb	$0, (%rax)
-	movq	-16(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	callq	strcpy
-	movq	-40(%rbp), %rax
-	movslq	-8(%rbp), %rcx
-	movb	(%rax,%rcx), %al
-	movq	-16(%rbp), %rcx
-	movl	-4(%rbp), %edx
-	subl	$2, %edx
-	movslq	%edx, %rdx
-	movb	%al, (%rcx,%rdx)
-	movq	-16(%rbp), %rax
-	movl	-4(%rbp), %ecx
-	subl	$1, %ecx
-	movslq	%ecx, %rcx
-	movb	$0, (%rax,%rcx)
-	movq	-24(%rbp), %rdi
-	callq	free
-	movq	-16(%rbp), %rax
-	movq	%rax, -24(%rbp)
-# %bb.3:                                #   in Loop: Header=BB9_1 Depth=1
-	movl	-8(%rbp), %eax
-	addl	$1, %eax
-	movl	%eax, -8(%rbp)
-	jmp	.LBB9_1
+	lw	a0, -36(s0)
+	lw	a1, -24(s0)
+	bge	a0, a1, .LBB9_4
+	j	.LBB9_2
+.LBB9_2:                                #   in Loop: Header=BB9_1 Depth=1
+	lw	a0, -40(s0)
+	addi	a0, a0, 1
+	sw	a0, -40(s0)
+	srai	a1, a0, 31
+	call	malloc
+	sw	a0, -48(s0)
+	lw	a0, -48(s0)
+	sb	zero, 0(a0)
+	lw	a0, -48(s0)
+	lw	a1, -32(s0)
+	call	strcpy
+	lw	a0, -16(s0)
+	lw	a1, -36(s0)
+	add	a0, a0, a1
+	lb	a0, 0(a0)
+	lw	a1, -48(s0)
+	lw	a2, -40(s0)
+	add	a1, a2, a1
+	sb	a0, -2(a1)
+	lw	a0, -48(s0)
+	lw	a1, -40(s0)
+	add	a0, a1, a0
+	sb	zero, -1(a0)
+	lw	a0, -32(s0)
+	call	free
+	lw	a0, -48(s0)
+	sw	a0, -32(s0)
+	j	.LBB9_3
+.LBB9_3:                                #   in Loop: Header=BB9_1 Depth=1
+	lw	a0, -36(s0)
+	addi	a0, a0, 1
+	sw	a0, -36(s0)
+	j	.LBB9_1
 .LBB9_4:
-	movq	-24(%rbp), %rax
-	addq	$48, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	lw	a0, -32(s0)
+	lw	s1, 36(sp)
+	lw	s0, 40(sp)
+	lw	ra, 44(sp)
+	addi	sp, sp, 48
+	ret
 .Lfunc_end9:
 	.size	string_subString, .Lfunc_end9-string_subString
 	.cfi_endproc
                                         # -- End function
 	.globl	string_parseInt         # -- Begin function string_parseInt
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_parseInt,@function
 string_parseInt:                        # @string_parseInt
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$32, %rsp
-	movq	%rdi, -16(%rbp)
-	movl	$0, -20(%rbp)
-	movb	$0, -1(%rbp)
-	movq	-16(%rbp), %rax
-	movsbl	(%rax), %eax
-	cmpl	$45, %eax
-	jne	.LBB10_2
-# %bb.1:
-	movb	$1, -1(%rbp)
-	movq	-16(%rbp), %rax
-	addq	$1, %rax
-	movq	%rax, -16(%rbp)
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	zero, -20(s0)
+	sb	zero, -21(s0)
+	lw	a0, -16(s0)
+	lb	a0, 0(a0)
+	addi	a1, zero, 45
+	bne	a0, a1, .LBB10_2
+	j	.LBB10_1
+.LBB10_1:
+	addi	a0, zero, 1
+	sb	a0, -21(s0)
+	lw	a0, -16(s0)
+	addi	a0, a0, 1
+	sw	a0, -16(s0)
+	j	.LBB10_2
 .LBB10_2:
-	jmp	.LBB10_3
+	j	.LBB10_3
 .LBB10_3:                               # =>This Inner Loop Header: Depth=1
-	movq	-16(%rbp), %rax
-	movsbl	(%rax), %eax
-	cmpl	$0, %eax
-	je	.LBB10_9
-# %bb.4:                                #   in Loop: Header=BB10_3 Depth=1
-	callq	__ctype_b_loc
-	movq	(%rax), %rax
-	movq	-16(%rbp), %rcx
-	movsbl	(%rcx), %ecx
-	movslq	%ecx, %rcx
-	movzwl	(%rax,%rcx,2), %eax
-	andl	$2048, %eax             # imm = 0x800
-	cmpl	$0, %eax
-	je	.LBB10_6
-# %bb.5:                                #   in Loop: Header=BB10_3 Depth=1
-	imull	$10, -20(%rbp), %eax
-	movq	-16(%rbp), %rcx
-	movsbl	(%rcx), %ecx
-	subl	$48, %ecx
-	addl	%ecx, %eax
-	movl	%eax, -20(%rbp)
-	jmp	.LBB10_7
+	lw	a0, -16(s0)
+	lb	a0, 0(a0)
+	beqz	a0, .LBB10_9
+	j	.LBB10_4
+.LBB10_4:                               #   in Loop: Header=BB10_3 Depth=1
+	call	__ctype_b_loc
+	lw	a0, 0(a0)
+	lw	a1, -16(s0)
+	lb	a1, 0(a1)
+	slli	a1, a1, 1
+	add	a0, a0, a1
+	lhu	a0, 0(a0)
+	lui	a1, 1
+	addi	a1, a1, -2048
+	and	a0, a0, a1
+	beqz	a0, .LBB10_6
+	j	.LBB10_5
+.LBB10_5:                               #   in Loop: Header=BB10_3 Depth=1
+	lw	a0, -20(s0)
+	addi	a1, zero, 10
+	call	__mulsi3
+	lw	a1, -16(s0)
+	lb	a1, 0(a1)
+	add	a0, a1, a0
+	addi	a0, a0, -48
+	sw	a0, -20(s0)
+	j	.LBB10_7
 .LBB10_6:
-	jmp	.LBB10_10
+	j	.LBB10_10
 .LBB10_7:                               #   in Loop: Header=BB10_3 Depth=1
-	jmp	.LBB10_8
+	j	.LBB10_8
 .LBB10_8:                               #   in Loop: Header=BB10_3 Depth=1
-	movq	-16(%rbp), %rax
-	addq	$1, %rax
-	movq	%rax, -16(%rbp)
-	jmp	.LBB10_3
+	lw	a0, -16(s0)
+	addi	a0, a0, 1
+	sw	a0, -16(s0)
+	j	.LBB10_3
 .LBB10_9:                               # %.loopexit
-	jmp	.LBB10_10
+	j	.LBB10_10
 .LBB10_10:
-	movl	-20(%rbp), %eax
-	movb	-1(%rbp), %cl
-	testb	$1, %cl
-	movl	$4294967295, %ecx       # imm = 0xFFFFFFFF
-	movl	$1, %edx
-	cmovnel	%ecx, %edx
-	imull	%edx, %eax
-	addq	$32, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	lw	a0, -20(s0)
+	lbu	a1, -21(s0)
+	andi	a2, a1, 1
+	addi	a1, zero, -1
+	bnez	a2, .LBB10_12
+# %bb.11:
+	addi	a1, zero, 1
+.LBB10_12:
+	call	__mulsi3
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end10:
 	.size	string_parseInt, .Lfunc_end10-string_parseInt
 	.cfi_endproc
                                         # -- End function
 	.globl	string_ord              # -- Begin function string_ord
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_ord,@function
 string_ord:                             # @string_ord
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	movq	%rdi, -16(%rbp)
-	movl	%esi, -4(%rbp)
-	movq	-16(%rbp), %rax
-	movslq	-4(%rbp), %rcx
-	movsbl	(%rax,%rcx), %eax
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -20(s0)
+	lw	a0, -16(s0)
+	lw	a1, -20(s0)
+	add	a0, a0, a1
+	lb	a0, 0(a0)
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end11:
 	.size	string_ord, .Lfunc_end11-string_ord
 	.cfi_endproc
                                         # -- End function
 	.globl	string_add              # -- Begin function string_add
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_add,@function
 string_add:                             # @string_add
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	pushq	%rbx
-	subq	$24, %rsp
-	.cfi_offset %rbx, -24
-	movq	%rdi, -32(%rbp)
-	movq	%rsi, -24(%rbp)
-	movq	-32(%rbp), %rdi
-	callq	strlen
-	movq	%rax, %rbx
-	movq	-24(%rbp), %rdi
-	callq	strlen
-	addq	%rax, %rbx
-	addq	$1, %rbx
-	shlq	$0, %rbx
-	movq	%rbx, %rdi
-	callq	malloc
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rax
-	movb	$0, (%rax)
-	movq	-16(%rbp), %rdi
-	movq	-32(%rbp), %rsi
-	callq	strcat
-	movq	-16(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	callq	strcat
-	movq	-16(%rbp), %rax
-	addq	$24, %rsp
-	popq	%rbx
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -48
+	.cfi_def_cfa_offset 48
+	sw	ra, 44(sp)
+	sw	s0, 40(sp)
+	sw	s1, 36(sp)
+	sw	s2, 32(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	.cfi_offset s1, -12
+	.cfi_offset s2, -16
+	addi	s0, sp, 48
+	.cfi_def_cfa s0, 0
+	sw	a0, -24(s0)
+	sw	a1, -32(s0)
+	lw	a0, -24(s0)
+	call	strlen
+	mv	s1, a0
+	mv	s2, a1
+	lw	a0, -32(s0)
+	call	strlen
+	add	a1, s2, a1
+	add	a2, s1, a0
+	sltu	a0, a2, s1
+	add	a1, a1, a0
+	addi	a0, a2, 1
+	sltu	a2, a0, a2
+	add	a1, a1, a2
+	call	malloc
+	sw	a0, -40(s0)
+	lw	a0, -40(s0)
+	sb	zero, 0(a0)
+	lw	a0, -40(s0)
+	lw	a1, -24(s0)
+	call	strcat
+	lw	a0, -40(s0)
+	lw	a1, -32(s0)
+	call	strcat
+	lw	a0, -40(s0)
+	lw	s2, 32(sp)
+	lw	s1, 36(sp)
+	lw	s0, 40(sp)
+	lw	ra, 44(sp)
+	addi	sp, sp, 48
+	ret
 .Lfunc_end12:
 	.size	string_add, .Lfunc_end12-string_add
 	.cfi_endproc
                                         # -- End function
 	.globl	string_eq               # -- Begin function string_eq
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_eq,@function
 string_eq:                              # @string_eq
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -16(%rbp)
-	movq	%rsi, -8(%rbp)
-	movq	-16(%rbp), %rdi
-	movq	-8(%rbp), %rsi
-	callq	strcmp
-	cmpl	$0, %eax
-	sete	%al
-	andb	$1, %al
-	movzbl	%al, %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -24(s0)
+	call	strcmp
+	seqz	a0, a0
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end13:
 	.size	string_eq, .Lfunc_end13-string_eq
 	.cfi_endproc
                                         # -- End function
 	.globl	string_ne               # -- Begin function string_ne
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_ne,@function
 string_ne:                              # @string_ne
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -16(%rbp)
-	movq	%rsi, -8(%rbp)
-	movq	-16(%rbp), %rdi
-	movq	-8(%rbp), %rsi
-	callq	strcmp
-	cmpl	$0, %eax
-	setne	%al
-	andb	$1, %al
-	movzbl	%al, %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -24(s0)
+	call	strcmp
+	snez	a0, a0
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end14:
 	.size	string_ne, .Lfunc_end14-string_ne
 	.cfi_endproc
                                         # -- End function
 	.globl	string_lt               # -- Begin function string_lt
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_lt,@function
 string_lt:                              # @string_lt
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -16(%rbp)
-	movq	%rsi, -8(%rbp)
-	movq	-16(%rbp), %rdi
-	movq	-8(%rbp), %rsi
-	callq	strcmp
-	cmpl	$0, %eax
-	setl	%al
-	andb	$1, %al
-	movzbl	%al, %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -24(s0)
+	call	strcmp
+	srli	a0, a0, 31
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end15:
 	.size	string_lt, .Lfunc_end15-string_lt
 	.cfi_endproc
                                         # -- End function
 	.globl	string_le               # -- Begin function string_le
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_le,@function
 string_le:                              # @string_le
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -16(%rbp)
-	movq	%rsi, -8(%rbp)
-	movq	-16(%rbp), %rdi
-	movq	-8(%rbp), %rsi
-	callq	strcmp
-	cmpl	$0, %eax
-	setle	%al
-	andb	$1, %al
-	movzbl	%al, %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -24(s0)
+	call	strcmp
+	slti	a0, a0, 1
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end16:
 	.size	string_le, .Lfunc_end16-string_le
 	.cfi_endproc
                                         # -- End function
 	.globl	string_gt               # -- Begin function string_gt
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_gt,@function
 string_gt:                              # @string_gt
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -16(%rbp)
-	movq	%rsi, -8(%rbp)
-	movq	-16(%rbp), %rdi
-	movq	-8(%rbp), %rsi
-	callq	strcmp
-	cmpl	$0, %eax
-	setg	%al
-	andb	$1, %al
-	movzbl	%al, %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -24(s0)
+	call	strcmp
+	sgtz	a0, a0
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end17:
 	.size	string_gt, .Lfunc_end17-string_gt
 	.cfi_endproc
                                         # -- End function
 	.globl	string_ge               # -- Begin function string_ge
-	.p2align	4, 0x90
+	.p2align	2
 	.type	string_ge,@function
 string_ge:                              # @string_ge
 	.cfi_startproc
 # %bb.0:
-	pushq	%rbp
-	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
-	movq	%rdi, -16(%rbp)
-	movq	%rsi, -8(%rbp)
-	movq	-16(%rbp), %rdi
-	movq	-8(%rbp), %rsi
-	callq	strcmp
-	cmpl	$0, %eax
-	setge	%al
-	andb	$1, %al
-	movzbl	%al, %eax
-	addq	$16, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
-	retq
+	addi	sp, sp, -32
+	.cfi_def_cfa_offset 32
+	sw	ra, 28(sp)
+	sw	s0, 24(sp)
+	.cfi_offset ra, -4
+	.cfi_offset s0, -8
+	addi	s0, sp, 32
+	.cfi_def_cfa s0, 0
+	sw	a0, -16(s0)
+	sw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -24(s0)
+	call	strcmp
+	not	a0, a0
+	srli	a0, a0, 31
+	lw	s0, 24(sp)
+	lw	ra, 28(sp)
+	addi	sp, sp, 32
+	ret
 .Lfunc_end18:
 	.size	string_ge, .Lfunc_end18-string_ge
 	.cfi_endproc

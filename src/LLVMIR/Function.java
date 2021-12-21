@@ -8,10 +8,12 @@ import java.util.ArrayList;
 public class Function {
     public int regNum;
     public IRType retType;
+    public Entity retEntity;
     public String identifier;
     public ArrayList<Entity> parameters;
     public BasicBlock entry;
     public ArrayList<BasicBlock> blocks;
+    public ArrayList<BasicBlock> retBlocks;
 
     public Function(int regNum_, IRType retType_, String identifier_,
                     ArrayList<Entity> parameters_, BasicBlock entry_){
@@ -21,6 +23,7 @@ public class Function {
         parameters = parameters_;
         entry = entry_;
         blocks = new ArrayList<>();
+        retBlocks = new ArrayList<>();
     }
 
     public String getRegId(){
