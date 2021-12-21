@@ -1,3 +1,6 @@
 [submodule "testcases"]
 	path = testcases
 	url = git@github.com:ZYHowell/Compiler-2021-testcases.git
+[submodule "ravel"]
+	path = ravel
+	url = git@github.com:Yveh/ravel.git
