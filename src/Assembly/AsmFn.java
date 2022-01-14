@@ -2,7 +2,6 @@ package Assembly;
 
 import Assembly.Operand.Reg;
 import Assembly.Operand.virtualReg;
-import Assembly.Operand.phyReg;
 
 import java.util.ArrayList;
 import java.util.HashMap;

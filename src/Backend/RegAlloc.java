@@ -118,6 +118,7 @@ public class RegAlloc implements Pass {
     public void visit(storeOp it) {
         if (it.symbol == null)
             it.rs = loadVReg(it, it.rs, t0);
-        it.rd = loadVReg(it, it.rd, t1);
+        else it.rt = loadVReg(it, it.rt, t1);
+        it.rd = loadVReg(it, it.rd, t2);
     }
 }
