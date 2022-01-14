@@ -25,4 +25,12 @@ public class baseType extends IRType{
             ret += Integer.toString(i_N);
         return ret;
     }
+
+    @Override
+    public int getBytes() {
+        return switch (typeName){
+            case VOID, LABEL -> 0;
+            case I -> i_N == 1 ? 1 : i_N / 8;
+        };
+    }
 }

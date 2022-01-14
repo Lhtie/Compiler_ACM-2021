@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 import LLVMIR.Type.IRType;
 
 public class load extends Stmt{
@@ -16,5 +17,10 @@ public class load extends Stmt{
     @Override
     public String toString(){
         return rd.getValue() + " = load " + Type + ", " + rs;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

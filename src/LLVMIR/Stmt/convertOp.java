@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 import LLVMIR.Type.IRType;
 
 public class convertOp extends Stmt{
@@ -23,5 +24,10 @@ public class convertOp extends Stmt{
     public String toString(){
         return rd.getValue() + " = " + covType.name().toLowerCase()
                 + " " + rs + " to " + targetType;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

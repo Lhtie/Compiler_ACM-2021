@@ -75,16 +75,24 @@ public class constant extends Entity {
     }
 
     public boolean isInteger(){
-        return constType == constantType.I32 || constType == constantType.I64;
+        return constType == constantType.I8 || constType == constantType.I32 || constType == constantType.I64;
     }
 
     public boolean isBoolean(){
         return constType == constantType.I1;
     }
 
+    public int getIntVal(){
+        if (isInteger())
+            return constType == constantType.I32 ? i32 : i8;
+        else if (isBoolean())
+            return i1 ? 1 : 0;
+        return 0;
+    }
+
     public Entity neg(){
         assert(isInteger());
-        return new constant(type, constType == constantType.I32 ? -i32 : -i64);
+        return new constant(type, constType == constantType.I64 ? -i64 : -getIntVal());
     }
 
     public Entity not(){
@@ -92,7 +100,7 @@ public class constant extends Entity {
             return new constant(type, !i1);
         else {
             assert(isInteger());
-            return new constant(type, constType == constantType.I32 ? ~i32 : ~i64);
+            return new constant(type, constType == constantType.I64 ? ~i64 : ~getIntVal());
         }
     }
 

@@ -25,7 +25,7 @@ public class Module {
         IRType i32 = new baseType(baseType.typeToken.I, 32);
         IRType i64 = new baseType(baseType.typeToken.I, 64);
         IRType Void = new baseType(baseType.typeToken.VOID);
-        ArrayList<Entity> parameters = new ArrayList<>(List.of(new register(false, i64, "0")));
+        ArrayList<Entity> parameters = new ArrayList<>(List.of(new register(false, i32, "0")));
         malloc = new Function(2, new ptrType(i8),"malloc", parameters, new BasicBlock("1"));
         gVars.add(new declare(malloc));
         parameters = new ArrayList<>(List.of(new register(false, new ptrType(i8), "0")));

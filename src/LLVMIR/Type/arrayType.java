@@ -12,6 +12,11 @@ public class arrayType extends IRType{
 
     @Override
     public String toString(){
-        return "[" + Integer.toString(size) + " x " + type + "]";
+        return "[" + size + " x " + type + "]";
+    }
+
+    @Override
+    public int getBytes() {
+        return size * type.getBytes();
     }
 }

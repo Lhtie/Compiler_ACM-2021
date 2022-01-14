@@ -7,17 +7,13 @@ import LLVMIR.Entity.Entity;
 import LLVMIR.Entity.register;
 import LLVMIR.Function;
 import LLVMIR.Module;
-import LLVMIR.Stmt.constStmt;
-import LLVMIR.Stmt.declare;
 import LLVMIR.Type.IRType;
 import LLVMIR.Type.baseType;
 import LLVMIR.Type.ptrType;
 import LLVMIR.Type.classType;
-import LLVMIR.Type.arrayType;
 import Util.Scope;
 import Util.Type;
 import Util.globalScope;
-import Util.position;
 
 import java.util.ArrayList;
 
@@ -86,6 +82,7 @@ public class IRCollector implements ASTVisitor {
         currentScope = ((globalScope) currentScope).getScopeFromClass(it.pos, it.name);
         gScope = (globalScope) currentScope;
         ((globalScope) currentScope).currentClass = currentClass;
+        currentClass.hasConstr = it.constructorDef != null;
         it.funcDef.forEach(x -> x.accept(this));
         it.varDef.forEach(x -> x.accept(this));
         gScope = (globalScope) gScope.getParentScope();

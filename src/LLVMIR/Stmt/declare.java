@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Function;
+import LLVMIR.Pass;
 import LLVMIR.Type.IRType;
 
 import java.util.ArrayList;
@@ -26,5 +27,10 @@ public class declare extends Stmt{
         }
         ret += ")";
         return ret;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

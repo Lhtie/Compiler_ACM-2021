@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 
 public class store extends Stmt{
     public Entity rs, rd;
@@ -13,5 +14,10 @@ public class store extends Stmt{
     @Override
     public String toString(){
         return "store " + rs + ", " + rd;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

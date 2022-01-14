@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 import LLVMIR.Type.IRType;
 import LLVMIR.Function;
 import LLVMIR.Type.baseType;
@@ -30,5 +31,10 @@ public class call extends Stmt{
         }
         ret += ")";
         return ret;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

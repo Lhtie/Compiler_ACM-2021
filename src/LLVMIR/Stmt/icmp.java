@@ -2,6 +2,7 @@ package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
 import AST.binaryExprNode;
+import LLVMIR.Pass;
 
 public class icmp extends Stmt{
     public enum compareType{
@@ -40,5 +41,10 @@ public class icmp extends Stmt{
     public String toString(){
         return rd.getValue() + " = icmp " + cmpType.name().toLowerCase()
             + " " + lhs + ", " + rhs.getValue();
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

@@ -1,7 +1,6 @@
 import AST.RootNode;
-import Backend.IRCollector;
-import Backend.IRBuilder;
-import Backend.IRPrinter;
+import Assembly.AsmMod;
+import Backend.*;
 import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
@@ -22,8 +21,8 @@ import java.io.InputStream;
 public class main {
     public static void main(String[] args) throws Exception{
         String name = "test.mx";
-        InputStream raw = System.in;
-//        InputStream raw = new FileInputStream(name);
+//        InputStream raw = System.in;
+        InputStream raw = new FileInputStream(name);
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
@@ -45,8 +44,12 @@ public class main {
             Module topModule = new Module();
             new IRCollector(gScope, topModule).visit(ASTRoot);
             new IRBuilder(gScope, topModule).visit(ASTRoot);
-            new IRPrinter(System.out).visitModule(topModule);
+//            new IRPrinter(System.out).visitModule(topModule);
 
+            AsmMod topAsmMod = new AsmMod();
+            new InstrSelector(topAsmMod).visitModule(topModule);
+            new RegAlloc().visit(topAsmMod);
+            new AsmPrinter(System.out).visit(topAsmMod);
         } catch(error er) {
             System.err.println(er.toString());
             throw new RuntimeException();

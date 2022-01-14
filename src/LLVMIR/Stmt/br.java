@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 
 public class br extends Stmt{
     public Boolean isCond;
@@ -23,5 +24,10 @@ public class br extends Stmt{
         if (isCond)
             return "br " + cmpRes + ", " + label1 + ", " + label2;
         else return "br " + label1;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

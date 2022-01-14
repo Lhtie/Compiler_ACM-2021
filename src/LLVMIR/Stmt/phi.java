@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 import LLVMIR.Type.IRType;
 
 import java.util.ArrayList;
@@ -32,5 +33,10 @@ public class phi extends Stmt{
             ret += "[ " + val.get(i).getValue() + ", %" + label.get(i).getValue() + " ]";
         }
         return ret;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }

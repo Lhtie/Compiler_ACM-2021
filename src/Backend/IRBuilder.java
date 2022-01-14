@@ -60,7 +60,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
-        topModule.gVars.add(new constStmt("@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @__cxx_global_var_init, i8* null }]"));
         globalVarInitFn = new Function(1, new baseType(baseType.typeToken.VOID), "__cxx_global_var_init", new ArrayList<>(), new BasicBlock("0"));
         topModule.fns.add(globalVarInitFn);
 
@@ -79,16 +78,6 @@ public class IRBuilder implements ASTVisitor {
         gScope = (globalScope) currentScope;
         if (it.constructorDef != null)
             it.constructorDef.accept(this);
-        else {
-            ArrayList<Entity> parameters = new ArrayList<>();
-            parameters.add(new register(false, new ptrType(new classType(gScope.currentClass)), "0"));
-            BasicBlock block = new BasicBlock("1");
-            block.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
-            Function fn = new Function(2, new baseType(baseType.typeToken.VOID),
-                    "class." + it.name, parameters, block);
-            gScope.addFunc(fn.identifier, fn);
-            topModule.fns.add(fn);
-        }
         it.funcDef.forEach(x -> x.accept(this));
         gScope = (globalScope) gScope.getParentScope();
         currentScope = currentScope.getParentScope();
@@ -131,20 +120,14 @@ public class IRBuilder implements ASTVisitor {
                 topModule.gVars.add(new global(res, global.defineType.GLOBAL, new constant(type)));
                 currentScope.addRegister(x.name, res);
                 if (x.isInitialized){
-                    currentBlock = new BasicBlock("0");
-                    Function fn = new Function(1, new baseType(baseType.typeToken.VOID),
-                            "__cxx_global_var_init." + globalVarInitFn.getRegId(),
-                            new ArrayList<>(), currentBlock);
-                    currentFn = fn;
-                    globalVarInitFn.entry.stmts.add(new call(null, fn, new ArrayList<>()));
+                    currentFn = globalVarInitFn;
+                    currentBlock = globalVarInitFn.entry;
                     x.expr.accept(this);
                     if (retEntity.islValue)
                         retEntity = loadPtrType(retEntity);
                     if (isNull(retEntity))
                         retEntity.type = ((ptrType) res.type).type;
                     currentBlock.stmts.add(new store(retEntity, res));
-                    currentBlock.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
-                    topModule.fns.add(fn);
                 }
             } else {
                 Entity res = new register(true, new ptrType(type), currentFn.getRegId());
@@ -188,6 +171,9 @@ public class IRBuilder implements ASTVisitor {
         currentBlock = currentFn.entry;
         if (gScope.getParentScope() != null)
             gScope.classEntity = currentFn.parameters.get(0);
+
+        if (it.name.equals("main"))
+            currentBlock.stmts.add(new call(null, globalVarInitFn, new ArrayList<>()));
 
         currentScope = gScope.getScopeFromFunc(it.pos, it.name);
         it.parameterList.accept(this);
@@ -672,22 +658,17 @@ public class IRBuilder implements ASTVisitor {
     private Entity mallocArray(ArrayList<Entity> creatorSize, int cur, IRType base){
         int dim = creatorSize.size() - cur;
         Entity size = creatorSize.get(cur), bytes;
-        long baseBytes = 8;
-        if (dim <= 1)
-            baseBytes = base instanceof ptrType ? 8 : ((baseType) base).i_N == 1 ? 1 : 4;
+        long baseBytes = dim <= 1 ? base.getBytes() : 4;
         if (size instanceof constant tmp)
-            bytes = new constant(new baseType(baseType.typeToken.I, 64),
+            bytes = new constant(new baseType(baseType.typeToken.I, 32),
                     (tmp.constType == constant.constantType.I32 ? tmp.i32 : tmp.i64) * baseBytes + 4);
         else {
-            Entity operand = new register(false, new baseType(baseType.typeToken.I, 64),
-                    currentFn.getRegId());
-            currentBlock.stmts.add(new convertOp(convertOp.convertType.SEXT, operand, size));
-            Entity bytes_ = new register(false, operand.type, currentFn.getRegId());
-            currentBlock.stmts.add(new binaryOp(bytes_, binaryOp.binaryOpType.MUL, operand,
-                    new constant(operand.type, baseBytes)));
-            bytes = new register(false, operand.type, currentFn.getRegId());
+            Entity bytes_ = new register(false, size.type, currentFn.getRegId());
+            currentBlock.stmts.add(new binaryOp(bytes_, binaryOp.binaryOpType.MUL, size,
+                    new constant(size.type, baseBytes)));
+            bytes = new register(false, size.type, currentFn.getRegId());
             currentBlock.stmts.add(new binaryOp(bytes, binaryOp.binaryOpType.ADD, bytes_,
-                    new constant(operand.type, 4)));
+                    new constant(size.type, 4)));
         }
         Entity ptr = new register(false, new ptrType(new baseType(baseType.typeToken.I, 8)),
                 currentFn.getRegId());
@@ -724,7 +705,7 @@ public class IRBuilder implements ASTVisitor {
         currentBlock.stmts.add(new store(ctx, phiRes));
         Entity nxt = new register(false, type, currentFn.getRegId());
         instr = new getelementptr(nxt, true, ((ptrType) type).type, phiRes);
-        instr.addOffset(new constant(new baseType(baseType.typeToken.I, 64), 1));
+        instr.addOffset(new constant(new baseType(baseType.typeToken.I, 32), 1));
         currentBlock.stmts.add(instr);
         Entity cmp = new register(false, new baseType(baseType.typeToken.I, 1), currentFn.getRegId());
         currentBlock.stmts.add(new icmp(cmp, icmp.compareType.EQ, nxt, end));
@@ -745,13 +726,15 @@ public class IRBuilder implements ASTVisitor {
             Entity ptr = new register(false, new ptrType(new baseType(baseType.typeToken.I, 8)),
                     currentFn.getRegId());
             ArrayList<Entity> parameters = new ArrayList<>();
-            parameters.add(new constant(new baseType(baseType.typeToken.I, 64), cl.bytes));
+            parameters.add(new constant(new baseType(baseType.typeToken.I, 32), cl.bytes));
             currentBlock.stmts.add(new call(ptr, topModule.malloc, parameters));
             retEntity = new register(false, new ptrType(new classType(cl)), currentFn.getRegId());
             currentBlock.stmts.add(new convertOp(convertOp.convertType.BITCAST, retEntity, ptr));
-            globalScope classScope = (globalScope) gScope.getScopeFromClass(it.pos, cl.className);
-            parameters = new ArrayList<>(List.of(retEntity));
-            currentBlock.stmts.add(new call(null, classScope.getFunc(cl.identifier), parameters));
+            if (cl.hasConstr) {
+                globalScope classScope = (globalScope) gScope.getScopeFromClass(it.pos, cl.className);
+                parameters = new ArrayList<>(List.of(retEntity));
+                currentBlock.stmts.add(new call(null, classScope.getFunc(cl.identifier), parameters));
+            }
         } else {    // new array
             IRType type;
             if (it.classId != null)

@@ -1,14 +1,13 @@
 package Backend;
 
-import LLVMIR.BasicBlock;
+import LLVMIR.*;
 import LLVMIR.Class;
-import LLVMIR.Function;
 import LLVMIR.Module;
-import LLVMIR.Stmt.Stmt;
+import LLVMIR.Stmt.*;
 
 import java.io.PrintStream;
 
-public class IRPrinter implements Pass{
+public class IRPrinter implements Pass {
     private PrintStream os;
 
     public IRPrinter(PrintStream os_){
@@ -65,4 +64,19 @@ public class IRPrinter implements Pass{
     public void visitStmt(Stmt stmt) {
         os.println(stmt);
     }
+
+    @Override public void visit(alloca it) {}
+    @Override public void visit(binaryOp it) {}
+    @Override public void visit(br it) {}
+    @Override public void visit(call it) {}
+    @Override public void visit(convertOp it) {}
+    @Override public void visit(declare it) {}
+    @Override public void visit(getelementptr it) {}
+    @Override public void visit(global it) {}
+    @Override public void visit(icmp it) {}
+    @Override public void visit(load it) {}
+    @Override public void visit(phi it) {}
+    @Override public void visit(ret it) {}
+    @Override public void visit(store it) {}
+
 }

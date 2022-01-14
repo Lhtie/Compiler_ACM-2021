@@ -11,4 +11,9 @@ public class ptrType extends IRType{
     public String toString(){
         return type + "*";
     }
+
+    @Override
+    public int getBytes() {
+        return 4;
+    }
 }

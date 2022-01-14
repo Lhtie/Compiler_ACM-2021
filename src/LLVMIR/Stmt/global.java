@@ -1,6 +1,7 @@
 package LLVMIR.Stmt;
 
 import LLVMIR.Entity.Entity;
+import LLVMIR.Pass;
 
 public class global extends Stmt{
     public enum defineType{
@@ -19,5 +20,10 @@ public class global extends Stmt{
     @Override
     public String toString(){
         return rd.getValue() + " = " + defType.name().toLowerCase() + " " + init;
+    }
+
+    @Override
+    public void accept(Pass visitor) {
+        visitor.visit(this);
     }
 }
