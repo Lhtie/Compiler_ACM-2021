@@ -21,7 +21,7 @@ public class AsmFn {
     public AsmFn(int index_, String name_, AsmMod topAsmMod){
         index = index_;
         name = name_;
-        entry = new AsmBlock(".LBB" + index_ + "_0");
+        entry = new AsmBlock(".BB" + index_ + "_0");
         blocks = new ArrayList<>();
         stackOffset = new HashMap<>();
         stackOffset.put(topAsmMod.regs.get(1), offset += 4);
@@ -29,7 +29,7 @@ public class AsmFn {
     }
 
     public AsmBlock addBlock(){
-        AsmBlock ret = new AsmBlock(".LBB" + index + "_" + (blocks.size() + 1));
+        AsmBlock ret = new AsmBlock(".BB" + index + "_" + (blocks.size() + 1));
         blocks.add(ret);
         return ret;
     }
