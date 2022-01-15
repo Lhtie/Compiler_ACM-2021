@@ -17,9 +17,26 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Objects;
 
 public class main {
+    private static String Semantic = "-fsyntax-only";
+    private static String LLVMIR = "-emit-llvm";
+    private static String Assembly = "-S";
+
     public static void main(String[] args) throws Exception{
+        boolean SemanticSwitch = false, LLVMIRSwitch = false, AssemblySwtich = false;
+        for (int i = 0; i < args.length; ++i){
+            if (args[i].charAt(0) == '-'){
+                if (Objects.equals(args[i], Semantic))
+                    SemanticSwitch = true;
+                else if (Objects.equals(args[i], LLVMIR))
+                    LLVMIRSwitch = true;
+                else if (Objects.equals(args[i], Assembly))
+                    AssemblySwtich = true;
+            }
+        }
+
         String name = "test.mx";
         InputStream raw = System.in;
 //        InputStream raw = new FileInputStream(name);
@@ -41,15 +58,19 @@ public class main {
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);
 
-            Module topModule = new Module();
-            new IRCollector(gScope, topModule).visit(ASTRoot);
-            new IRBuilder(gScope, topModule).visit(ASTRoot);
-//            new IRPrinter(System.out).visitModule(topModule);
+            if (!SemanticSwitch) {
+                Module topModule = new Module();
+                new IRCollector(gScope, topModule).visit(ASTRoot);
+                new IRBuilder(gScope, topModule).visit(ASTRoot);
+                if (LLVMIRSwitch)
+                    new IRPrinter(System.out).visitModule(topModule);
 
-            AsmMod topAsmMod = new AsmMod();
-            new InstrSelector(topAsmMod).visitModule(topModule);
-            new RegAlloc().visit(topAsmMod);
-            new AsmPrinter(System.out).visit(topAsmMod);
+                AsmMod topAsmMod = new AsmMod();
+                new InstrSelector(topAsmMod).visitModule(topModule);
+                new RegAlloc().visit(topAsmMod);
+                if (AssemblySwtich)
+                    new AsmPrinter(System.out).visit(topAsmMod);
+            }
         } catch(error er) {
             System.err.println(er.toString());
             throw new RuntimeException();
