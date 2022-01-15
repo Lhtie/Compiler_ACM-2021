@@ -69,7 +69,10 @@ public class IRBuilder implements ASTVisitor {
                     new constant(((ptrType) entry.getValue().type).type, entry.getKey())));
         }
 
-        globalVarInitFn.entry.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
+        BasicBlock bb = globalVarInitFn.entry;
+        if (globalVarInitFn.blocks.size() > 0)
+            bb = globalVarInitFn.blocks.get(globalVarInitFn.blocks.size() - 1);
+        bb.stmts.add(new ret(new constant(new baseType(baseType.typeToken.VOID))));
     }
 
     @Override
@@ -121,7 +124,9 @@ public class IRBuilder implements ASTVisitor {
                 currentScope.addRegister(x.name, res);
                 if (x.isInitialized){
                     currentFn = globalVarInitFn;
-                    currentBlock = globalVarInitFn.entry;
+                    if (globalVarInitFn.blocks.size() == 0)
+                        currentBlock = globalVarInitFn.entry;
+                    else currentBlock = globalVarInitFn.blocks.get(globalVarInitFn.blocks.size() - 1);
                     x.expr.accept(this);
                     if (retEntity.islValue)
                         retEntity = loadPtrType(retEntity);

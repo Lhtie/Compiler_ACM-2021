@@ -1,7 +1,4 @@
-/.idea
-/out
-/test.mx
-/local_judge.py
-/tools/bin
-/tools/build.bash
-/tools/semantic.bash
+.idea
+out
+test.mx
+tools/local_judge

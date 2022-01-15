@@ -6,17 +6,17 @@ import os, time
 """
     Modify following configurations to adapt to your environment.
 """
-test_cases_dir = '../testcases/sema/'
-# test_cases_dir = '../testcases/codegen/'
+# test_cases_dir = '../testcases/sema/'
+test_cases_dir = '../testcases/codegen/'
 # test_cases_dir = '../testcases/optim/'
 compile_cmd = "bash ./build.bash"
-execute_cmd = "bash ./semantic.bash"
+execute_cmd = "bash ./codegen.bash"
 excluded_test_cases = ["foo.mx"]
 ravel_path = "ravel --enable-cache"
-builtin_path = "./builtin/builtin.s"
+builtin_path = "../src/BuiltIn/BuiltIn.s"
 halt_on_3_fails = False
 calculate_score = False
-test_codegen = False
+test_codegen = True
 # When test_codegen && use_llvm is true, the output should be a .ll file, and we will use llc to
 # compile it into asm. You can test the correctness of your IR-gen with this.
 use_llvm = False

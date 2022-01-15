@@ -26,6 +26,7 @@ public class InstrSelector implements Pass {
     public HashMap<Entity, Reg> regTrans;
     public HashMap<Entity, AsmBlock> blockMap;
 
+    private int iterNum = 0;
     private phyReg zero, ra, sp, s0, a0, a1;
 
     public InstrSelector(AsmMod topAsmMod_){
@@ -87,8 +88,12 @@ public class InstrSelector implements Pass {
     public void visitFunction(Function fn) {
         currentFn = topAsmMod.addFn(fn.identifier);
         currentBlock = currentFn.entry;
-        for (int i = 0; i < Integer.min(8, fn.parameters.size()); ++i)
-            regTrans.put(fn.parameters.get(i), topAsmMod.regs.get(10 + i));
+        for (int i = 0; i < Integer.min(8, fn.parameters.size()); ++i) {
+            Entity para = fn.parameters.get(i);
+            Reg rd = currentFn.addVReg(para.type.getBytes());
+            currentBlock.push_back(new mv(rd, topAsmMod.regs.get(10 + i)));
+            regTrans.put(para, rd);
+        }
         for (int i = 8; i < fn.parameters.size(); ++i){
             Entity para = fn.parameters.get(i);
             Reg rd = currentFn.addVReg(para.type.getBytes());
@@ -99,12 +104,16 @@ public class InstrSelector implements Pass {
         blockMap = new HashMap<>();
         blockMap.put(fn.entry.label, currentFn.entry);
         fn.blocks.forEach(x -> blockMap.put(x.label, currentFn.addBlock()));
-        currentBlock = currentFn.entry;
-        visitBasicBlock(fn.entry);
-        fn.blocks.forEach(x -> {
-            currentBlock = blockMap.get(x.label);
-            visitBasicBlock(x);
-        });
+
+        for (iterNum = 0; iterNum < 2; ++iterNum) {
+            currentBlock = currentFn.entry;
+            visitBasicBlock(fn.entry);
+            fn.blocks.forEach(x -> {
+                currentBlock = blockMap.get(x.label);
+                visitBasicBlock(x);
+            });
+        }
+        iterNum = 0;
     }
 
     @Override
@@ -121,7 +130,8 @@ public class InstrSelector implements Pass {
 
     @Override
     public void visitStmt(Stmt stmt) {
-        stmt.accept(this);
+        if (iterNum == 0 || stmt instanceof phi)
+            stmt.accept(this);
     }
 
     @Override
@@ -229,17 +239,18 @@ public class InstrSelector implements Pass {
 
     @Override
     public void visit(getelementptr it) {
-        Reg res = trans(it.rs);
+        Reg res = currentFn.addVReg(it.rd.type.getBytes());
         int bytes = it.type.getBytes();
         // only consider 1 arrOffset & classOffset
         Entity rs = it.arrOffset.get(0);
         if (rs instanceof constant c && constInRange(c.getIntVal() * bytes)) {
             if (c.getIntVal() != 0)
-                currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, res, new imm(c.getIntVal() * bytes)));
+                currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, trans(it.rs), new imm(c.getIntVal() * bytes)));
+            else currentBlock.push_back(new mv(res, trans(it.rs)));
         } else {
             Reg l = trans(rs), r = currentFn.addVReg(rs.type.getBytes());
             currentBlock.push_back(new RCalcOp(RCalcOp.RType.MUL, r, l, trans(new constant(rs.type, bytes))));
-            currentBlock.push_back(new RCalcOp(RCalcOp.RType.ADD, res, res, r));
+            currentBlock.push_back(new RCalcOp(RCalcOp.RType.ADD, res, trans(it.rs), r));
         }
         if (it.classOffset.size() > 0){
             rs = it.classOffset.get(0);
@@ -256,9 +267,11 @@ public class InstrSelector implements Pass {
     public void visit(global it) {
         if (it.init.type instanceof arrayType t){
             if (t.type instanceof baseType base && base.i_N == 8) // string
-                if (it.init instanceof constant c)
+                if (it.init instanceof constant c) {
+                    String str = c.str.replace("\\0A", "\\n").replace("\\22", "\\\"").replace("\\5C", "\\\\");
                     topAsmMod.dts.add(new AsmData(it.defType == global.defineType.CONSTANT,
-                            ((globalEntity) it.rd).name, c.str));
+                            ((globalEntity) it.rd).name, str));
+                }
         } else {
             if (it.init instanceof constant c)
                 topAsmMod.dts.add(new AsmData(it.defType == global.defineType.CONSTANT,
@@ -271,9 +284,10 @@ public class InstrSelector implements Pass {
         Reg res = currentFn.addVReg(it.rd.type.getBytes());
         switch (it.cmpType){
             case EQ, NE -> {
-                currentBlock.push_back(new RCalcOp(RCalcOp.RType.XOR, res, trans(it.lhs), trans(it.rhs)));
+                Reg xor = currentFn.addVReg(it.lhs.type.getBytes());
+                currentBlock.push_back(new RCalcOp(RCalcOp.RType.XOR, xor, trans(it.lhs), trans(it.rhs)));
                 currentBlock.push_back(new cmpPseOp(it.cmpType == icmp.compareType.EQ ?
-                        cmpPseOp.cmpType.SEQZ : cmpPseOp.cmpType.SNEZ, res, res));
+                        cmpPseOp.cmpType.SEQZ : cmpPseOp.cmpType.SNEZ, res, xor));
             }
             case SLT, SGT -> {
                 Entity l = it.lhs, r = it.rhs;
@@ -312,14 +326,17 @@ public class InstrSelector implements Pass {
 
     @Override
     public void visit(phi it) {
-        Reg res = currentFn.addVReg(it.rd.type.getBytes());
-        for (int i = 0; i < it.label.size(); ++i){
-            AsmBlock bb = blockMap.get(it.label.get(i));
-            Instr from = currentBlock.prevInstr.get(bb);
-            Instr mv = new mv(res, trans(it.val.get(i), bb, from));
-            bb.insert_before(from, mv);
+        if (iterNum == 0){
+            Reg res = currentFn.addVReg(it.rd.type.getBytes());
+            regTrans.put(it.rd, res);
+        } else {
+            for (int i = 0; i < it.label.size(); ++i) {
+                AsmBlock bb = blockMap.get(it.label.get(i));
+                Instr from = currentBlock.prevInstr.get(bb);
+                Instr mv = new mv(trans(it.rd), trans(it.val.get(i), bb, from));
+                bb.insert_before(from, mv);
+            }
         }
-        regTrans.put(it.rd, res);
     }
 
     @Override
