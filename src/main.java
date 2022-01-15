@@ -15,17 +15,18 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Objects;
 
 public class main {
     private static String Semantic = "-fsyntax-only";
     private static String LLVMIR = "-emit-llvm";
     private static String Assembly = "-S";
+    private static String Output = "-o";
 
     public static void main(String[] args) throws Exception{
         boolean SemanticSwitch = false, LLVMIRSwitch = false, AssemblySwtich = false;
+        PrintStream os = System.out;
         for (int i = 0; i < args.length; ++i){
             if (args[i].charAt(0) == '-'){
                 if (Objects.equals(args[i], Semantic))
@@ -34,12 +35,13 @@ public class main {
                     LLVMIRSwitch = true;
                 else if (Objects.equals(args[i], Assembly))
                     AssemblySwtich = true;
+                else if (Objects.equals(args[i], Output))
+                    os = new PrintStream(new FileOutputStream(args[i+1]));
             }
         }
 
-        String name = "test.mx";
         InputStream raw = System.in;
-//        InputStream raw = new FileInputStream(name);
+//        InputStream raw = new FileInputStream("test.mx");
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
@@ -63,13 +65,13 @@ public class main {
                 new IRCollector(gScope, topModule).visit(ASTRoot);
                 new IRBuilder(gScope, topModule).visit(ASTRoot);
                 if (LLVMIRSwitch)
-                    new IRPrinter(System.out).visitModule(topModule);
+                    new IRPrinter(os).visitModule(topModule);
 
                 AsmMod topAsmMod = new AsmMod();
                 new InstrSelector(topAsmMod).visitModule(topModule);
                 new RegAlloc().visit(topAsmMod);
                 if (AssemblySwtich)
-                    new AsmPrinter(System.out).visit(topAsmMod);
+                    new AsmPrinter(os).visit(topAsmMod);
             }
         } catch(error er) {
             System.err.println(er.toString());
