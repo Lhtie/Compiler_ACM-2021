@@ -12,7 +12,8 @@ public class RegAlloc implements Pass {
     private phyReg t0, t1, t2, s0;
 
     private Operand loadVReg(Instr it, Operand rs, Operand t){
-        if (rs instanceof virtualReg vreg){
+        if (rs instanceof virtualReg){
+            virtualReg vreg = (virtualReg) rs;
             if (!currentFn.stackOffset.containsKey(vreg))
                 currentFn.alloc(vreg, vreg.bytes);
             currentBlock.insert_before(it, new loadOp(vreg.bytes, t, s0,
@@ -22,7 +23,8 @@ public class RegAlloc implements Pass {
     }
 
     private Operand storeVReg(Instr it, Operand rd, Operand t){
-        if (rd instanceof virtualReg vreg) {
+        if (rd instanceof virtualReg) {
+            virtualReg vreg = (virtualReg) rd;
             if (!currentFn.stackOffset.containsKey(vreg))
                 currentFn.alloc(vreg, vreg.bytes);
             currentBlock.insert_after(it, new storeOp(vreg.bytes, t, s0,

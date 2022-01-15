@@ -51,11 +51,30 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private boolean isString(Entity x){
-        return x.type instanceof ptrType p && p.type instanceof baseType q && q.i_N == 8;
+        if (x.type instanceof  ptrType){
+            ptrType p = (ptrType) x.type;
+            if (p.type instanceof baseType){
+                baseType q = (baseType) p.type;
+                return q.i_N == 8;
+            }
+        }
+        return false;
     }
 
     private boolean isNull(Entity x){
-        return x instanceof constant c && c.constType == constant.constantType.NULL;
+        if (x instanceof constant){
+            constant c = (constant) x;
+            return c.constType == constant.constantType.NULL;
+        }
+        return false;
+    }
+
+    private boolean isVoid(IRType x){
+        if (x instanceof baseType) {
+            baseType base = (baseType) x;
+            return base.typeName == baseType.typeToken.VOID;
+        }
+        return false;
     }
 
     @Override
@@ -445,7 +464,7 @@ public class IRBuilder implements ASTVisitor {
                 retEntity.type = fn.parameters.get(i).type;
             parameters.add(retEntity);
         }
-        if (fn.retType instanceof baseType base && base.typeName == baseType.typeToken.VOID)
+        if (isVoid(fn.retType))
             retEntity = null;
         else retEntity = new register(false, fn.retType, currentFn.getRegId());
         call instr = new call(retEntity, fn, parameters);
@@ -506,16 +525,23 @@ public class IRBuilder implements ASTVisitor {
                 retEntity = loadPtrType(retEntity);
             globalScope gScope_ = gScope;
             Scope currentScope_ = currentScope;
-            if (((ptrType) retEntity.type).type instanceof classType cl)
+            IRType t = ((ptrType) retEntity.type).type;
+            if (t instanceof classType) {
+                classType cl = (classType) t;
                 currentScope = gScope.getScopeFromClass(it.pos, cl.className);
-            else if (((ptrType) retEntity.type).type instanceof baseType bs && bs.i_N == 8)
-                currentScope = gScope.getScopeFromClass(it.pos, "class.string");
-            else {
-                currentScope = gScope.getScopeFromClass(it.pos, "class.__array");
-                Entity res = new register(false, new ptrType(new baseType(baseType.typeToken.I, 8)),
-                        currentFn.getRegId());
-                currentBlock.stmts.add(new convertOp(convertOp.convertType.BITCAST, res, retEntity));
-                retEntity = res;
+            } else {
+                baseType bs = null;
+                if (t instanceof baseType)
+                    bs = (baseType) t;
+                if (t instanceof baseType && bs.i_N == 8)
+                    currentScope = gScope.getScopeFromClass(it.pos, "class.string");
+                else {
+                    currentScope = gScope.getScopeFromClass(it.pos, "class.__array");
+                    Entity res = new register(false, new ptrType(new baseType(baseType.typeToken.I, 8)),
+                            currentFn.getRegId());
+                    currentBlock.stmts.add(new convertOp(convertOp.convertType.BITCAST, res, retEntity));
+                    retEntity = res;
+                }
             }
             gScope = (globalScope) currentScope;
             Entity classEntity_ = gScope.classEntity;
@@ -664,10 +690,11 @@ public class IRBuilder implements ASTVisitor {
         int dim = creatorSize.size() - cur;
         Entity size = creatorSize.get(cur), bytes;
         long baseBytes = dim <= 1 ? base.getBytes() : 4;
-        if (size instanceof constant tmp)
+        if (size instanceof constant) {
+            constant tmp = (constant) size;
             bytes = new constant(new baseType(baseType.typeToken.I, 32),
                     (tmp.constType == constant.constantType.I32 ? tmp.i32 : tmp.i64) * baseBytes + 4);
-        else {
+        } else {
             Entity bytes_ = new register(false, size.type, currentFn.getRegId());
             currentBlock.stmts.add(new binaryOp(bytes_, binaryOp.binaryOpType.MUL, size,
                     new constant(size.type, baseBytes)));

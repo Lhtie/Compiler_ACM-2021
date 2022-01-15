@@ -18,7 +18,8 @@ public class binaryOp extends Stmt{
     private void trySwap(){
         switch (opType){
             case ADD, MUL, AND, OR, XOR -> {
-                if (rs1 instanceof constant c){
+                if (rs1 instanceof constant){
+                    constant c = (constant) rs1;
                     int val = c.getIntVal();
                     if (-2048 <= val && val < 2048) {
                         Entity tmp = rs1;

@@ -46,7 +46,8 @@ public class InstrSelector implements Pass {
     }
 
     private Reg trans(Entity x){
-        if (x instanceof constant c){
+        if (x instanceof constant){
+            constant c = (constant) x;
             int val = c.getIntVal();
             if (val == 0) return zero;
             else {
@@ -54,7 +55,8 @@ public class InstrSelector implements Pass {
                 currentBlock.push_back(new li(ret, new imm(val)));
                 return ret;
             }
-        } else if (x instanceof globalEntity g){
+        } else if (x instanceof globalEntity){
+            globalEntity g = (globalEntity) x;
             Reg ret = currentFn.addVReg(4);
             currentBlock.push_back(new la(ret, g.name));
             return ret;
@@ -62,7 +64,8 @@ public class InstrSelector implements Pass {
     }
 
     private Reg trans(Entity x, AsmBlock bb, Instr nxt){
-        if (x instanceof constant c){
+        if (x instanceof constant){
+            constant c = (constant) x;
             int val = c.getIntVal();
             if (val == 0) return zero;
             else {
@@ -70,7 +73,8 @@ public class InstrSelector implements Pass {
                 bb.insert_before(nxt, new li(ret, new imm(val)));
                 return ret;
             }
-        } else if (x instanceof globalEntity g){
+        } else if (x instanceof globalEntity){
+            globalEntity g = (globalEntity) x;
             Reg ret = currentFn.addVReg(4);
             bb.insert_before(nxt, new la(ret, g.name));
             return ret;
@@ -144,14 +148,17 @@ public class InstrSelector implements Pass {
     @Override
     public void visit(binaryOp it) {
         Reg res = currentFn.addVReg(it.rd.type.getBytes());
+        constant c = null;
+        if (it.rs2 instanceof constant)
+            c = (constant) it.rs2;
         switch (it.opType) {
             case ADD -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
-                    currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, trans(it.rs1), new imm(c.getIntVal())));
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
+                        currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, trans(it.rs1), new imm(c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.ADD, res, trans(it.rs1), trans(it.rs2)));
             }
             case SUB -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
                     currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, trans(it.rs1), new imm(-c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.SUB, res, trans(it.rs1), trans(it.rs2)));
             }
@@ -159,27 +166,27 @@ public class InstrSelector implements Pass {
             case SDIV -> currentBlock.push_back(new RCalcOp(RCalcOp.RType.DIV, res, trans(it.rs1), trans(it.rs2)));
             case SREM -> currentBlock.push_back(new RCalcOp(RCalcOp.RType.REM, res, trans(it.rs1), trans(it.rs2)));
             case AND -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
                     currentBlock.push_back(new ICalcOp(ICalcOp.IType.ANDI, res, trans(it.rs1), new imm(c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.AND, res, trans(it.rs1), trans(it.rs2)));
             }
             case OR -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
                         currentBlock.push_back(new ICalcOp(ICalcOp.IType.ORI, res, trans(it.rs1), new imm(c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.OR, res, trans(it.rs1), trans(it.rs2)));
             }
             case XOR -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
                     currentBlock.push_back(new ICalcOp(ICalcOp.IType.XORI, res, trans(it.rs1), new imm(c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.XOR, res, trans(it.rs1), trans(it.rs2)));
             }
             case SHL -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
                     currentBlock.push_back(new ICalcOp(ICalcOp.IType.SLLI, res, trans(it.rs1), new imm(c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.SLL, res, trans(it.rs1), trans(it.rs2)));
             }
             case ASHR -> {
-                if (it.rs2 instanceof constant c && constInRange(c.getIntVal()))
+                if (it.rs2 instanceof constant && constInRange(c.getIntVal()))
                     currentBlock.push_back(new ICalcOp(ICalcOp.IType.SRAI, res, trans(it.rs1), new imm(c.getIntVal())));
                 else currentBlock.push_back(new RCalcOp(RCalcOp.RType.SRA, res, trans(it.rs1), trans(it.rs2)));
             }
@@ -208,7 +215,10 @@ public class InstrSelector implements Pass {
         currentFn.maxOverCall= Math.max(currentFn.maxOverCall, bytes);
         for (int i = 0; i < Math.min(8, it.parameters.size()); ++i) {
             Entity rs = it.parameters.get(i);
-            if (rs instanceof constant c && constInRange(c.getIntVal()))
+            constant c = null;
+            if (rs instanceof constant)
+                c = (constant) rs;
+            if (rs instanceof constant && constInRange(c.getIntVal()))
                 currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, topAsmMod.regs.get(10 + i),
                         zero, new imm(c.getIntVal())));
             else currentBlock.push_back(new mv(topAsmMod.regs.get(10 + i), trans(it.parameters.get(i))));
@@ -243,7 +253,10 @@ public class InstrSelector implements Pass {
         int bytes = it.type.getBytes();
         // only consider 1 arrOffset & classOffset
         Entity rs = it.arrOffset.get(0);
-        if (rs instanceof constant c && constInRange(c.getIntVal() * bytes)) {
+        constant c = null;
+        if (rs instanceof constant)
+            c = (constant) rs;
+        if (rs instanceof constant && constInRange(c.getIntVal() * bytes)) {
             if (c.getIntVal() != 0)
                 currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, trans(it.rs), new imm(c.getIntVal() * bytes)));
             else currentBlock.push_back(new mv(res, trans(it.rs)));
@@ -254,7 +267,8 @@ public class InstrSelector implements Pass {
         }
         if (it.classOffset.size() > 0){
             rs = it.classOffset.get(0);
-            if (rs instanceof constant c) {
+            if (rs instanceof constant) {
+                c = (constant) rs;
                 int offset = ((classType) it.type).cl.offset.get(c.getIntVal());
                 if (offset != 0)
                     currentBlock.push_back(new ICalcOp(ICalcOp.IType.ADDI, res, res, new imm(offset)));
@@ -265,17 +279,23 @@ public class InstrSelector implements Pass {
 
     @Override
     public void visit(global it) {
-        if (it.init.type instanceof arrayType t){
-            if (t.type instanceof baseType base && base.i_N == 8) // string
-                if (it.init instanceof constant c) {
+        if (it.init.type instanceof arrayType){
+            arrayType t = (arrayType) it.init.type;
+            if (t.type instanceof baseType) {
+                baseType base = (baseType) t.type;
+                if (base.i_N == 8 && it.init instanceof constant) {
+                    constant c = (constant) it.init;
                     String str = c.str.replace("\\0A", "\\n").replace("\\22", "\\\"").replace("\\5C", "\\\\");
                     topAsmMod.dts.add(new AsmData(it.defType == global.defineType.CONSTANT,
                             ((globalEntity) it.rd).name, str));
                 }
+            }
         } else {
-            if (it.init instanceof constant c)
+            if (it.init instanceof constant) {
+                constant c = (constant) it.init;
                 topAsmMod.dts.add(new AsmData(it.defType == global.defineType.CONSTANT,
                         ((globalEntity) it.rd).name, c.getIntVal(), c.isBoolean()));
+            }
         }
     }
 
@@ -312,9 +332,10 @@ public class InstrSelector implements Pass {
     @Override
     public void visit(load it) {
         Reg vrd = currentFn.addVReg(it.rd.type.getBytes());
-        if (it.rs instanceof globalEntity rs)
+        if (it.rs instanceof globalEntity) {
+            globalEntity rs = (globalEntity) it.rs;
             currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, rs.name));
-        else {
+        } else {
             Reg rs = trans(it.rs);
             if (currentFn.stackOffset.containsKey(rs))
                 currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, s0,
@@ -346,7 +367,8 @@ public class InstrSelector implements Pass {
 
     @Override
     public void visit(store it) {
-        if (it.rd instanceof globalEntity rd) {
+        if (it.rd instanceof globalEntity) {
+            globalEntity rd = (globalEntity) it.rd;
             Reg rt = currentFn.addVReg(4);
             currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), rd.name, rt));
         } else{
