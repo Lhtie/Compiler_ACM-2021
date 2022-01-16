@@ -337,9 +337,17 @@ public class InstrSelector implements Pass {
             currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, rs.name));
         } else {
             Reg rs = trans(it.rs);
-            if (currentFn.stackOffset.containsKey(rs))
-                currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, s0,
-                        new imm(-currentFn.stackOffset.get(trans(it.rs)))));
+            if (currentFn.stackOffset.containsKey(rs)) {
+                int imm = -currentFn.stackOffset.get(trans(it.rs));
+                if (constInRange(imm))
+                    currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, s0, new imm(imm)));
+                else {
+                    Reg t = currentFn.addVReg(4);
+                    currentBlock.push_back(new li(t, new imm(imm)));
+                    currentBlock.push_back(new RCalcOp(RCalcOp.RType.ADD, t, s0, t));
+                    currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, t, new imm(0)));
+                }
+            }
             else currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, rs, new imm(0)));
         }
         regTrans.put(it.rd, vrd);
@@ -373,10 +381,17 @@ public class InstrSelector implements Pass {
             currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), rd.name, rt));
         } else{
             Reg rd = trans(it.rd);
-            if (currentFn.stackOffset.containsKey(rd))
-                currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), s0,
-                        new imm(-currentFn.stackOffset.get(rd))));
-            else currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), rd, new imm(0)));
+            if (currentFn.stackOffset.containsKey(rd)) {
+                int imm = -currentFn.stackOffset.get(rd);
+                if (constInRange(imm))
+                    currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), s0, new imm(imm)));
+                else {
+                    Reg t = currentFn.addVReg(4);
+                    currentBlock.push_back(new li(t, new imm(imm)));
+                    currentBlock.push_back(new RCalcOp(RCalcOp.RType.ADD, t, s0, t));
+                    currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), t, new imm(0)));
+                }
+            } else currentBlock.push_back(new storeOp(it.rs.type.getBytes(), trans(it.rs), rd, new imm(0)));
         }
     }
 }

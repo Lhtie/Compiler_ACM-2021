@@ -11,17 +11,23 @@ public class AsmPrinter implements Pass {
     public PrintStream os;
 
     public AsmMod topAsmMod;
-    private phyReg sp, ra, s0;
+    private phyReg sp, ra, s0, t0, t1;
 
     public AsmPrinter(PrintStream os_){
         os = os_;
     }
 
+    private boolean constInRange(int val){
+        return -2048 <= val && val < 2048;
+    }
+
     @Override
     public void visit(AsmMod mod) {
         topAsmMod = mod;
-        sp = topAsmMod.regs.get(2);
         ra = topAsmMod.regs.get(1);
+        sp = topAsmMod.regs.get(2);
+        t0 = topAsmMod.regs.get(5);
+        t1 = topAsmMod.regs.get(6);
         s0 = topAsmMod.regs.get(8);
 
         os.println("\t.text\n");
@@ -38,14 +44,29 @@ public class AsmPrinter implements Pass {
         int stackSize = fn.offset + fn.maxOverCall;
         if (stackSize % 16 != 0)
             stackSize = (stackSize / 16 + 1) * 16;
-        fn.entry.push_front(new ICalcOp(ICalcOp.IType.ADDI, s0, sp, new imm(stackSize)));
-        fn.entry.push_front(new storeOp(4, s0, sp, new imm(stackSize - 8)));
-        fn.entry.push_front(new storeOp(4, ra, sp, new imm(stackSize - 4)));
-        fn.entry.push_front(new ICalcOp(ICalcOp.IType.ADDI, sp, sp, new imm(-stackSize)));
         AsmBlock bb = fn.blocks.size() > 0 ? fn.blocks.get(fn.blocks.size() - 1) : fn.entry;
-        bb.push_back(new loadOp(4, s0, sp, new imm(stackSize - 8)));
-        bb.push_back(new loadOp(4, ra, sp, new imm(stackSize - 4)));
-        bb.push_back(new ICalcOp(ICalcOp.IType.ADDI, sp, sp, new imm(stackSize)));
+
+        if (constInRange(stackSize)) {
+            fn.entry.push_front(new ICalcOp(ICalcOp.IType.ADDI, s0, sp, new imm(stackSize)));
+            fn.entry.push_front(new storeOp(4, s0, sp, new imm(stackSize - 8)));
+            fn.entry.push_front(new storeOp(4, ra, sp, new imm(stackSize - 4)));
+            fn.entry.push_front(new ICalcOp(ICalcOp.IType.ADDI, sp, sp, new imm(-stackSize)));
+            bb.push_back(new loadOp(4, s0, sp, new imm(stackSize - 8)));
+            bb.push_back(new loadOp(4, ra, sp, new imm(stackSize - 4)));
+            bb.push_back(new ICalcOp(ICalcOp.IType.ADDI, sp, sp, new imm(stackSize)));
+        } else {
+            fn.entry.push_front(new RCalcOp(RCalcOp.RType.ADD, s0, sp, t0));
+            fn.entry.push_front(new storeOp(4, s0, t1, new imm(-8)));
+            fn.entry.push_front(new storeOp(4, ra, t1, new imm(-4)));
+            fn.entry.push_front(new RCalcOp(RCalcOp.RType.ADD, t1, sp, t0));
+            fn.entry.push_front(new RCalcOp(RCalcOp.RType.SUB, sp, sp, t0));
+            fn.entry.push_front(new li(t0, new imm(stackSize)));
+            bb.push_back(new li(t0, new imm(stackSize)));
+            bb.push_back(new RCalcOp(RCalcOp.RType.ADD, t1, sp, t0));
+            bb.push_back(new loadOp(4, s0, t1, new imm(-8)));
+            bb.push_back(new loadOp(4, ra, t1, new imm(-4)));
+            bb.push_back(new RCalcOp(RCalcOp.RType.ADD, sp, sp, t0));
+        }
         bb.push_back(new ret());
 
         visit(fn.entry);

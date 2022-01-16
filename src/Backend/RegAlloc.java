@@ -9,15 +9,21 @@ public class RegAlloc implements Pass {
     public AsmFn currentFn;
     public AsmBlock currentBlock;
 
-    private phyReg t0, t1, t2, s0;
+    private phyReg t0, t1, t2, t3, s0;
 
     private Operand loadVReg(Instr it, Operand rs, Operand t){
         if (rs instanceof virtualReg){
             virtualReg vreg = (virtualReg) rs;
             if (!currentFn.stackOffset.containsKey(vreg))
                 currentFn.alloc(vreg, vreg.bytes);
-            currentBlock.insert_before(it, new loadOp(vreg.bytes, t, s0,
-                    new imm(-currentFn.stackOffset.get(vreg))));
+            int imm = -currentFn.stackOffset.get(vreg);
+            if (-2048 <= imm && imm < 2048)
+                currentBlock.insert_before(it, new loadOp(vreg.bytes, t, s0, new imm(imm)));
+            else {
+                currentBlock.insert_before(it, new li(t3, new imm(imm)));
+                currentBlock.insert_before(it, new RCalcOp(RCalcOp.RType.ADD, t3, s0, t3));
+                currentBlock.insert_before(it, new loadOp(vreg.bytes, t, t3, new imm(0)));
+            }
             return t;
         } else return rs;
     }
@@ -27,8 +33,14 @@ public class RegAlloc implements Pass {
             virtualReg vreg = (virtualReg) rd;
             if (!currentFn.stackOffset.containsKey(vreg))
                 currentFn.alloc(vreg, vreg.bytes);
-            currentBlock.insert_after(it, new storeOp(vreg.bytes, t, s0,
-                    new imm(-currentFn.stackOffset.get(vreg))));
+            int imm = -currentFn.stackOffset.get(vreg);
+            if (-2048 <= imm && imm < 2048)
+                currentBlock.insert_after(it, new storeOp(vreg.bytes, t, s0, new imm(imm)));
+            else {
+                currentBlock.insert_after(it, new storeOp(vreg.bytes, t, t3, new imm(0)));
+                currentBlock.insert_after(it, new RCalcOp(RCalcOp.RType.ADD, t3, s0, t3));
+                currentBlock.insert_after(it, new li(t3, new imm(imm)));
+            }
             return t;
         } else return rd;
     }
@@ -40,6 +52,7 @@ public class RegAlloc implements Pass {
         t1 = topAsmMod.regs.get(6);
         t2 = topAsmMod.regs.get(7);
         s0 = topAsmMod.regs.get(8);
+        t3 = topAsmMod.regs.get(28);
 
         topAsmMod.fns.forEach(this::visit);
     }
