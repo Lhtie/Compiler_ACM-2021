@@ -196,7 +196,7 @@ public class IRBuilder implements ASTVisitor {
         if (gScope.getParentScope() != null)
             gScope.classEntity = currentFn.parameters.get(0);
 
-        if (it.name.equals("main"))
+        if (gScope.getParentScope() == null && it.name.equals("main"))
             currentBlock.stmts.add(new call(null, globalVarInitFn, new ArrayList<>()));
 
         currentScope = gScope.getScopeFromFunc(it.pos, it.name);

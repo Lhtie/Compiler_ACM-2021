@@ -15,8 +15,7 @@ public class AsmFn {
     public Integer offset = 0;
     public HashMap<Reg, Integer> stackOffset;
     public int maxOverCall = 0;
-
-    private int virtualRegNum = 0;
+    public int virtualRegNum = 0;
 
     public AsmFn(int index_, String name_, AsmMod topAsmMod){
         index = index_;

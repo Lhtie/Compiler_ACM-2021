@@ -371,6 +371,7 @@ public class InstrSelector implements Pass {
     @Override
     public void visit(ret it) {
         currentBlock.push_back(new mv(a0, trans(it.ret)));
+        currentBlock.push_back(new retPse());
     }
 
     @Override

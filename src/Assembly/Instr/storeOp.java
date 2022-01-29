@@ -1,7 +1,11 @@
 package Assembly.Instr;
 
 import Assembly.Operand.Operand;
+import Assembly.Operand.Reg;
 import Assembly.Pass;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class storeOp extends Instr {
     public enum storeOpType{
@@ -36,6 +40,31 @@ public class storeOp extends Instr {
         rd = rd_;
         symbol = symbol_;
         rt = rt_;
+    }
+
+    @Override
+    public ArrayList<Reg> def() {
+        if (symbol == null) return new ArrayList<>();
+        else return new ArrayList<>(List.of((Reg) rt));
+    }
+
+    @Override
+    public ArrayList<Reg> use() {
+        ArrayList<Reg> ret = new ArrayList<>(List.of((Reg) rd));
+        if (symbol == null) ret.add((Reg) rs);
+        return ret;
+    }
+
+    @Override
+    public void push_def(ArrayList<Reg> def) {
+        if (symbol != null)
+            rt = def.get(0);
+    }
+
+    @Override
+    public void push_use(ArrayList<Reg> use) {
+        rd = use.get(0);
+        if (symbol == null) rs = use.get(1);
     }
 
     @Override

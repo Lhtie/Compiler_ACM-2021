@@ -5,13 +5,7 @@ import Assembly.Pass;
 
 import java.util.ArrayList;
 
-public class j extends Instr {
-    public String offset;
-
-    public j(String offset_){
-        offset = offset_;
-    }
-
+public class retPse extends Instr {
     @Override
     public ArrayList<Reg> def() {
         return new ArrayList<>();
@@ -30,7 +24,7 @@ public class j extends Instr {
 
     @Override
     public String toString(){
-        return "\tj\t" + offset;
+        return "\tret";
     }
 
     @Override

@@ -15,12 +15,27 @@ public class AsmMod {
     public ArrayList<AsmData> dts;
     public ArrayList<phyReg> regs;
 
+    public ArrayList<phyReg> calleeRegs, callerRegs;
+
     public AsmMod(){
         fns = new ArrayList<>();
         dts = new ArrayList<>();
         regs = new ArrayList<>();
+        calleeRegs = new ArrayList<>();
+        callerRegs = new ArrayList<>();
         for (int i = 0; i < 32; ++i)
             regs.add(new phyReg(phyRegName.get(i)));
+
+        for (int i = 8; i <= 9; ++i)
+            calleeRegs.add(regs.get(i));
+        for (int i = 18; i <= 27; ++i)
+            calleeRegs.add(regs.get(i));
+        for (int i = 5; i <= 7; ++i)
+            callerRegs.add(regs.get(i));
+        for (int i = 10; i <= 17; ++i)
+            callerRegs.add(regs.get(i));
+        for (int i = 28; i <= 31; ++i)
+            callerRegs.add(regs.get(i));
     }
 
     public AsmFn addFn(String name){

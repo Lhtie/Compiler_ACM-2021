@@ -1,6 +1,7 @@
 import AST.RootNode;
 import Assembly.AsmMod;
 import Backend.*;
+import Backend.RegAlloc;
 import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
@@ -69,7 +70,8 @@ public class main {
 
                 AsmMod topAsmMod = new AsmMod();
                 new InstrSelector(topAsmMod).visitModule(topModule);
-                new RegAlloc().visit(topAsmMod);
+                new RegAlloc(topAsmMod).run();
+//                new RegAlloc_naive().visit(topAsmMod);
                 if (AssemblySwtich)
                     new AsmPrinter(os).visit(topAsmMod);
             }

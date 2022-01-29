@@ -18,6 +18,6 @@ public interface Pass {
     void visit(loadOp it);
     void visit(mv it);
     void visit(RCalcOp it);
-    void visit(ret it);
+    void visit(retPse it);
     void visit(storeOp it);
 }
