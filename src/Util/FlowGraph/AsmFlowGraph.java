@@ -9,6 +9,7 @@ import Assembly.Instr.*;
 import Util.Graph.Node;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -67,33 +68,39 @@ public class AsmFlowGraph extends FlowGraph<Reg> {
         return toNode.get(i);
     }
 
-    private void dfs(Node x, ArrayList<Node> order){
-        visited.add(x);
-        x.succ.forEach(to -> {
-            if (!visited.contains(to))
-                dfs(to, order);
-            else {
-                String label1 = belongBlock.get(to), label2 = belongBlock.get(x);
-                int l = Integer.parseInt(label1.substring(label1.indexOf('_') + 1));
-                int r = Integer.parseInt(label2.substring(label2.indexOf('_') + 1));
-                if (l <= r)
-                    for (int i = l; i <= r; ++i){
-                        AsmBlock bb = i == 0 ? fn.entry : fn.blocks.get(i - 1);
-                        for (Instr iter = bb.head; iter != null; iter = iter.nxt){
-                            int t = loopDepth.get(iter);
-                            loopDepth.put(iter, t + 1);
+    private void bfs(Node start, ArrayList<Node> order){
+        order.add(start);
+        int head = 0;
+        while (head < order.size()) {
+            Node x = order.get(head);
+            x.succ.forEach(to -> {
+                if (!visited.contains(to)) {
+                    order.add(to);
+                    visited.add(to);
+                } else {
+                    String label1 = belongBlock.get(to), label2 = belongBlock.get(x);
+                    int l = Integer.parseInt(label1.substring(label1.indexOf('_') + 1));
+                    int r = Integer.parseInt(label2.substring(label2.indexOf('_') + 1));
+                    if (l <= r)
+                        for (int i = l; i <= r; ++i){
+                            AsmBlock bb = i == 0 ? fn.entry : fn.blocks.get(i - 1);
+                            for (Instr iter = bb.head; iter != null; iter = iter.nxt){
+                                int t = loopDepth.get(iter);
+                                loopDepth.put(iter, t + 1);
+                            }
                         }
-                    }
-            }
-        });
-        order.add(x);
+                }
+            });
+            head++;
+        }
     }
 
     public ArrayList<Node> getOrder(Instr entry){
         visited = new HashSet<>();
         visited.add(toNode.get(entry));
         ArrayList<Node> ret = new ArrayList<>();
-        dfs(toNode.get(entry), ret);
+        bfs(toNode.get(entry), ret);
+        Collections.reverse(ret);
         return ret;
     }
 
