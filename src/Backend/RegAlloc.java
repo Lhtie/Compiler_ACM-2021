@@ -6,7 +6,6 @@ import Assembly.AsmMod;
 import Assembly.Instr.*;
 import Assembly.Operand.*;
 import Util.FlowGraph.AsmFlowGraph;
-import Util.Graph.Node;
 import Util.InterferenceGraph;
 import org.antlr.v4.runtime.misc.Pair;
 
@@ -45,8 +44,6 @@ final class Coloring {
     private AsmFn fn;
     private int N, K;
 
-    private ArrayList<Node> order;
-    private HashMap<Node, BitSet> in, out;
     private HashSet<Instr> coalescedMoves, constrainedMoves, frozenMoves, worklistMoves, activeMoves;
     private HashSet<Integer> precolored, initial, simplifyWorklist, freezeWorklist, spillWorklist,
                 spilledNodes, coalescedNodes, coloredNodes, newTemps;
@@ -72,8 +69,8 @@ final class Coloring {
 
     private void calcPriority(AsmBlock bb){
         for (Instr i = bb.head; i != null; i = i.nxt){
-            ArrayList<Reg> entity = flowGraph.def(flowGraph.node(i));
-            entity.addAll(flowGraph.use(flowGraph.node(i)));
+            ArrayList<Reg> entity = i.def();
+            entity.addAll(i.use());
             for (Reg reg : entity) {
                 long t = priority.get(index(reg)), d = 1;
                 for (int p = 1; p <= flowGraph.loopDepth.get(i); ++p)
@@ -106,61 +103,38 @@ final class Coloring {
 
     private void LivenessAnalysis(){
         flowGraph = new AsmFlowGraph(topAsmMod, fn);
-        order = flowGraph.getOrder(fn.entry.head);
+        fn.blocks.removeIf(b -> !flowGraph.withinGraph(b));
         calcPriority(fn.entry);
         fn.blocks.forEach(this::calcPriority);
-
-        in = new HashMap<>();
-        out = new HashMap<>();
-        order.forEach(n -> {
-            in.put(n, new BitSet(N));
-            out.put(n, new BitSet(N));
-        });
-        boolean changed = true;
-        for (; changed; ){
-            changed = false;
-            for (Node n : order) {
-                BitSet inTmp = (BitSet) in.get(n).clone(), outTmp = (BitSet) out.get(n).clone();
-                BitSet use = new BitSet(N), def = new BitSet(N), outn = out.get(n);
-                flowGraph.use(n).forEach(x -> use.set(index(x)));
-                flowGraph.def(n).forEach(x -> def.set(index(x)));
-                outn.andNot(def);
-                use.or(outn);
-                in.put(n, use);
-                if (!use.equals(inTmp)) changed = true;
-                outn = new BitSet(N);
-                for (Node to : n.succ)
-                    outn.or(in.get(to));
-                out.put(n, outn);
-                if (!outn.equals(outTmp)) changed = true;
-            }
-        }
+        flowGraph.LivenessAnalysis(N);
     }
 
     private void Build(){
         interGraph = new InterferenceGraph(fn.virtualRegNum, N);
-        for (Node n : order) {
-            Instr I = flowGraph.instr(n);
-            BitSet live = (BitSet) out.get(n).clone();
-            if (flowGraph.isMove(n)){
-                BitSet useI = new BitSet(N);
-                flowGraph.use(n).forEach(x -> useI.set(index(x)));
-                live.andNot(useI);
-                ArrayList<Reg> t = flowGraph.def(n);
-                t.addAll(flowGraph.use(n));
-                for (Reg r : t)
-                    interGraph.moveList.get(index(r)).add(I);
-                worklistMoves.add(I);
+        ArrayList<AsmBlock> blocks = new ArrayList<>(List.of(fn.entry));
+        blocks.addAll(fn.blocks);
+        for (AsmBlock b : blocks) {
+            BitSet live = flowGraph.liveOut.get(flowGraph.node(b));
+            for (Instr I = b.tail; I != null; I = I.prv) {
+                if (I instanceof mv) {
+                    flowGraph.use(I).forEach(x -> live.clear(index(x)));
+                    ArrayList<Reg> t = flowGraph.def(I);
+                    t.addAll(flowGraph.use(I));
+                    for (Reg r : t)
+                        interGraph.moveList.get(index(r)).add(I);
+                    worklistMoves.add(I);
+                }
+                flowGraph.def(I).forEach(x -> live.set(index(x)));
+                for (Reg d : flowGraph.def(I))
+                    for (int l = live.nextSetBit(0); l != -1; l = live.nextSetBit(l + 1))
+                        interGraph.AddEdge(l, index(d));
+                // special for sw pseudo
+                if (I instanceof storeOp && ((storeOp) I).symbol != null)
+                    interGraph.AddEdge(index((Reg) ((storeOp) I).rd), index((Reg) ((storeOp) I).rt));
+
+                flowGraph.def(I).forEach(x -> live.clear(index(x)));
+                flowGraph.use(I).forEach(x -> live.set(index(x)));
             }
-            BitSet defI = new BitSet(N);
-            flowGraph.def(n).forEach(x -> defI.set(index(x)));
-            live.or(defI);
-            for (Reg d : flowGraph.def(n))
-                for (int l = live.nextSetBit(0); l != -1; l = live.nextSetBit(l + 1))
-                    interGraph.AddEdge(l, index(d));
-            // special for sw pseudo
-            if (I instanceof storeOp && ((storeOp) I).symbol != null)
-                interGraph.AddEdge(index((Reg) ((storeOp) I).rd), index((Reg) ((storeOp) I).rt));
         }
     }
 
