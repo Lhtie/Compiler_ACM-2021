@@ -41,8 +41,8 @@ public class main {
             }
         }
 
-        InputStream raw = System.in;
-//        InputStream raw = new FileInputStream("test.mx");
+//        InputStream raw = System.in;
+        InputStream raw = new FileInputStream("test.mx");
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
@@ -71,7 +71,7 @@ public class main {
                 AsmMod topAsmMod = new AsmMod();
                 new InstrSelector(topAsmMod).visitModule(topModule);
                 new RegAlloc(topAsmMod).run();
-                if (AssemblySwtich)
+//                if (AssemblySwtich)
                     new AsmPrinter(os).visit(topAsmMod);
             }
         } catch(error er) {

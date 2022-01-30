@@ -266,7 +266,8 @@ public class IRBuilder implements ASTVisitor {
                 it.block.accept(this);
                 currentScope = currentScope.getParentScope();
             } else {
-                it.elseStmt.accept(this);
+                if (it.elseStmt != null)
+                    it.elseStmt.accept(this);
             }
         } else {
             Entity cmpRes = retEntity;
