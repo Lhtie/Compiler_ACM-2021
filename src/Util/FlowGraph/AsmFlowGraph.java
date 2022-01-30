@@ -102,14 +102,15 @@ public class AsmFlowGraph extends FlowGraph<Reg> {
         Instr instr = toInstr.get(node);
         ArrayList<Reg> ret = instr.def();
         if (instr instanceof callPse)
-            ret.addAll(topAsmMod.calleeRegs);
-        return toInstr.get(node).def();
+            ret.addAll(topAsmMod.callerRegs);
+        return ret;
     }
 
     @Override
     public ArrayList<Reg> use(Node node) {
         Instr instr = toInstr.get(node);
         ArrayList<Reg> ret = instr.use();
+        ret.removeIf(reg -> reg == topAsmMod.regs.get(0));
         if (instr instanceof retPse)
             ret.addAll(topAsmMod.calleeRegs);
         return ret;

@@ -255,7 +255,8 @@ final class Coloring {
             if (u == v){
                 coalescedMoves.add(m);
                 AddWorkList(u);
-            } else if (precolored.contains(v) || interGraph.adjSet.contains(new Pair<>(u, v))){
+            } else if (precolored.contains(v) || interGraph.adjSet.contains(new Pair<>(u, v))
+                        || u == index(topAsmMod.regs.get(0))){  // u corresponds to zero
                 constrainedMoves.add(m);
                 AddWorkList(u);
                 AddWorkList(v);
@@ -296,9 +297,12 @@ final class Coloring {
     }
 
     private int GetAlias(int n){
-        if (coalescedNodes.contains(n))
-            return GetAlias(interGraph.alias.get(n));
-        else return n;
+        if (coalescedNodes.contains(n)) {
+            // disjoint union set
+            int res = GetAlias(interGraph.alias.get(n));
+            interGraph.alias.put(n, res);
+            return res;
+        } else return n;
     }
 
     private void Freeze(){
@@ -368,11 +372,12 @@ final class Coloring {
             ArrayList<Reg> def = new ArrayList<>();
             for (Reg reg : i.def())
                 if (spilledNodes.contains(index(reg))) {
-                    virtualReg v = fn.addVReg(4);
+                    virtualReg v = fn.addVReg(((virtualReg) reg).bytes);
                     def.add(v);
                     newTemps.add(index(v));
-                    fn.alloc(v, v.bytes);
-                    int imm = -fn.stackOffset.get(v);
+                    if (!fn.stackOffset.containsKey(reg))
+                        fn.alloc(reg, v.bytes);
+                    int imm = -fn.stackOffset.get(reg);
                     if (-2048 <= imm && imm < 2048)
                         bb.insert_after(i, new storeOp(v.bytes, v, s0, new imm(imm)));
                     else {
@@ -386,11 +391,12 @@ final class Coloring {
             ArrayList<Reg> use = new ArrayList<>();
             for (Reg reg : i.use())
                 if (spilledNodes.contains(index(reg))) {
-                    virtualReg v = fn.addVReg(4);
+                    virtualReg v = fn.addVReg(((virtualReg) reg).bytes);
                     use.add(v);
                     newTemps.add(index(v));
-                    fn.alloc(v, v.bytes);
-                    int imm = -fn.stackOffset.get(v);
+                    if (!fn.stackOffset.containsKey(reg))
+                        fn.alloc(reg, v.bytes);
+                    int imm = -fn.stackOffset.get(reg);
                     if (-2048 <= imm && imm < 2048)
                         bb.insert_before(i, new loadOp(v.bytes, v, s0, new imm(imm)));
                     else {
