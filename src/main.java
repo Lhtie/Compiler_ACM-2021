@@ -42,7 +42,7 @@ public class main {
         }
 
         InputStream raw = System.in;
-//        InputStream raw = new FileInputStream("test.mx");
+        InputStream raw = new FileInputStream("test.mx");
         try{
             CharStream input = CharStreams.fromStream(raw);
             MxStarLexer lexer = new MxStarLexer(input);
