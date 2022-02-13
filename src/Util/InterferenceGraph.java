@@ -18,7 +18,7 @@ public class InterferenceGraph {
     public InterferenceGraph(int nonPreColoredNum_, int N_) {
         nonPreColoredNum = nonPreColoredNum_;
         N = N_;
-        for (int i = 0; i < N; ++i){
+        for (int i = 0; i < nonPreColoredNum; ++i){
             adjList.put(i, new HashSet<>());
             degree.put(i, 0);
         }
@@ -27,8 +27,10 @@ public class InterferenceGraph {
             moveList.put(i, new HashSet<>());
         alias = new HashMap<>();
         color = new HashMap<>();
-        for (int i = nonPreColoredNum; i < N; ++i)
+        for (int i = nonPreColoredNum; i < N; ++i) {
+            degree.put(i, Integer.MAX_VALUE);
             color.put(i, i - nonPreColoredNum);
+        }
     }
 
     private boolean isPreColored(int index){

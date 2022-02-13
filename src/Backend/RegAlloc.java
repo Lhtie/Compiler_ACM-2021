@@ -21,16 +21,15 @@ public class RegAlloc {
 
     public void run(){
         topAsmMod.fns.forEach(fn -> {
-            t = new ArrayList<>(List.of(fn.addVReg(4)));
-            fn.entry.push_front(new mv(t.get(t.size() - 1), topAsmMod.calleeRegs.get(0)));
-            for (int i = 1; i < topAsmMod.calleeRegs.size(); ++i) {
+            t = new ArrayList<>();
+            for (int i = topAsmMod.calleeRegs.size() - 1; i >= 0; --i) {
                 t.add(fn.addVReg(4));
-                fn.entry.insert_after(fn.entry.head, new mv(t.get(t.size() - 1), topAsmMod.calleeRegs.get(i)));
+                fn.entry.push_front(new mv(t.get(t.size() - 1), topAsmMod.calleeRegs.get(i)));
             }
             AsmBlock bb = fn.blocks.size() == 0 ? fn.entry : fn.blocks.get(fn.blocks.size() - 1);
             assert(topAsmMod.calleeRegs.size() == t.size());
-            for (int i = t.size() - 1; i >= 0; --i)
-                bb.insert_before(bb.tail, new mv(topAsmMod.calleeRegs.get(i), t.get(i)));
+            for (int i = t.size() - 1, j = 0; i >= 0; --i, ++j)
+                bb.insert_before(bb.tail, new mv(topAsmMod.calleeRegs.get(i), t.get(j)));
 
             new Coloring(topAsmMod, fn).Main();
         });

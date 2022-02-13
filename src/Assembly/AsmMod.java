@@ -26,8 +26,7 @@ public class AsmMod {
         for (int i = 0; i < 32; ++i)
             regs.add(new phyReg(phyRegName.get(i)));
 
-        for (int i = 8; i <= 9; ++i)
-            calleeRegs.add(regs.get(i));
+        calleeRegs.add(regs.get(9));
         for (int i = 18; i <= 27; ++i)
             calleeRegs.add(regs.get(i));
         for (int i = 5; i <= 7; ++i)

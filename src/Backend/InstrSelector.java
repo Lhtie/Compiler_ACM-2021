@@ -338,8 +338,7 @@ public class InstrSelector implements Pass {
         } else {
             Reg rs = trans(it.rs);
             if (currentFn.stackOffset.containsKey(rs)){
-                regTrans.put(it.rd, rs);
-                return ;
+                currentBlock.push_back(new mv(vrd, rs));
             } else currentBlock.push_back(new loadOp(it.Type.getBytes(), vrd, rs, new imm(0)));
         }
         regTrans.put(it.rd, vrd);
